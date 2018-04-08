@@ -97,6 +97,16 @@ uint32_t envelope;
 // save
 uint32_t flash_lock_bit;
 
+#ifdef serialout
+  // Loop Counter
+  uint32_t loopc;
+  // for incoming serial data  
+  int incomingByte = 0;
+  // shotgun
+  byte shotgun[4];
+  uint8_t shotguncounter=2;
+#endif
+
 void setup() {
   uint32_t i;
 
@@ -142,6 +152,17 @@ void setup() {
   EFC0->EEFC_FMR = 0X00000400; // mandatory to keep program speed when loading the dueFlashStorage library. go wonder why.
 
   start_dac();
+
+  #ifdef serialout
+    Serial.begin(9600);
+    SerialUSB.begin(9600);
+    Serial.println("Hey! Hey!");
+    Serial.println("OCS-2!");
+    shotgun[0]=0xFF;
+    shotgun[1]=0xFF;
+    shotgun[2]=0xFF;
+    shotgun[3]=0xFF;
+   #endif
   
   while (true) main_loop(); // do not go into arduino loop
 }
@@ -150,6 +171,7 @@ inline void main_loop() { // as fast as possible
   uint32_t compteur, i, sound_in;
   uint32_t tmpU32;
   int32_t tmp32;
+  
   
   #ifdef syncro_out
     test2_on();
@@ -188,6 +210,136 @@ inline void main_loop() { // as fast as possible
   update_leds(); // gate and midi leds
   update_ext(); // external analog value
   analog_get_1(); // 2nd sample
+  
+  #ifdef serialout
+  
+    if (SerialUSB.available() > 0) {
+      //read the incoming byte:
+      incomingByte = SerialUSB.read();
+      /*
+      SerialUSB.print("I received: ");
+      SerialUSB.println(incomingByte, DEC);
+      */
+      if ((incomingByte < 100) || (incomingByte == 0xF0)){
+        shotguncounter=2;
+        shotgun[0]=incomingByte;
+      } else if (incomingByte > 0)
+        if (incomingByte == 0xFF) {
+          shotgun[0]=0xFF;
+          shotgun[1]=0xFF;
+          shotgun[2]=0xFF;
+          shotgun[3]=0xFF;
+        }
+        else { // continuous dump
+         if (incomingByte ==  shotgun[1]) {
+          shotgun[1]=shotgun[2];
+          shotgun[2]=shotgun[3];
+          shotgun[3]=0xFF;
+         }
+         else {
+          if (incomingByte == shotgun [2]) {
+           shotgun[2]=shotgun[3];
+           shotgun[3]=0xFF;
+          }
+          else {
+           if (incomingByte == shotgun [3]) {
+            shotgun[3]=0xFF;
+           }
+           else {
+            shotgun[3]=shotgun[2];
+            shotgun[2]=shotgun[1];
+            shotgun[1]=incomingByte;             
+           }
+          }
+         }
+        }
+
+  }
+        
+  if (!(loopc++ < 1)){
+    loopc=0;
+    for (i=0;i<4;i++){
+      switch (shotgun[i]) {
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+        case 13:
+        case 14:
+        case 15:
+        case 16:
+        case 17:
+        case 18:
+        case 19:
+        case 20:
+        case 21:
+        case 22:
+        case 23:
+        case 24:
+        case 25:
+        case 26:
+        case 27:
+        case 28:
+        case 29:
+        case 30:
+        case 31:
+        if (0 < shotguncounter) {
+          SerialUSB.write(0xFF);
+          SerialUSB.write((byte)shotgun[i]);
+          SerialUSB.write((byte)0x00);
+          SerialUSB.write((byte)0x00);
+          SerialUSB.write(adc_value[shotgun[i]] >>  8 & 0xFF);
+          SerialUSB.write(adc_value[shotgun[i]] >>  0 & 0xFF);
+          shotguncounter--;
+        }
+        break;
+
+        case 0xA0:
+        case 0xA1:
+        case 0xA2:
+        case 0xA3:
+        case 0xA4:
+        case 0xA5:
+        case 0xA6:
+        case 0xA7:
+        case 0xA8:
+        case 0xA9:
+        case 0xAA:
+        case 0xAB:
+        case 0xAC:
+        SerialUSB.write(0xFF);
+        SerialUSB.write((byte)shotgun[i]);
+        SerialUSB.write(modulation_data[shotgun[i]-0xA0] >> 24 & 0xFF);
+        SerialUSB.write(modulation_data[shotgun[i]-0xA0] >> 16 & 0xFF);
+        SerialUSB.write(modulation_data[shotgun[i]-0xA0] >>  8 & 0xFF);
+        SerialUSB.write(modulation_data[shotgun[i]-0xA0] >>  0 & 0xFF);
+     
+        break;
+        
+        case 0xF0:
+        if (0 < shotguncounter) {
+          SerialUSB.write(0xFF);
+          SerialUSB.write(0xF0);
+          SerialUSB.print("OCS2");
+          shotguncounter--;
+        }
+        break;
+        
+
+      }
+    }
+  }
+  
+  #endif
 }
 
 void loop() {

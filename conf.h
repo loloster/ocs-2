@@ -73,7 +73,7 @@
 
 
 // do not save current preset, and load default config on every startup
-//#define nosave
+#define nosave
 
 // output LFO analog value on the "LFO OUT" pad on the PCB
 // analogue value range from about 0.5V to 2.8V 
@@ -88,4 +88,6 @@
 // use the portamento fader as a fine-tuning fader
 //#define fine_tune
 
+// do compile Serial.XXX code
+#define serialout
 
