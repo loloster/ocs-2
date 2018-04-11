@@ -69,10 +69,10 @@ ports = list(list_ports.comports())
 #    print(p)
 
 try:
-    gstt.sernozoid = next(list_ports.grep("ACM1"))
+    gstt.sernozoid = next(list_ports.grep("ACM0"))
     print "Serial Picked for Nozoid :",gstt.sernozoid[0]
-    #Mser = serial.Serial(gstt.sernozoid[0],115200)
-    Mser = serial.Serial(gstt.sernozoid[0],115200,timeout=5)
+    Mser = serial.Serial(gstt.sernozoid[0],115200)
+    #Mser = serial.Serial(gstt.sernozoid[0],115200,timeout=5)
     print "Serial connection..."
     print "Device..." 
 
@@ -108,7 +108,8 @@ try:
 
     print "In_Waiting garbage msg # after cleaning up try:",Mser.in_waiting
 
-    raw_input("Press Enter to continue...")
+    time.sleep(1)
+    #raw_input("Press Enter to continue...")
 
 #    Mser.write([0x01])
 #    for i in range(2):
@@ -127,7 +128,7 @@ try:
 
     #Mser.write([0xA0]) #mod_osc1
     #Mser.write([0xA1]) #mod_osc2
-    Mser.write([0xA2]) #mod_osc3
+    #Mser.write([0xA2]) #mod_osc3
 
     #Mser.write([0xA3]) #mod_lfo1
     #Mser.write([0xA4]) #mod_lfo2
@@ -137,8 +138,9 @@ try:
         #print twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0]))
 	#int(Mser.read()[0],16)    
 	#print(ord(Mser.read(2)[0]))
-	print struct.unpack("<H",Mser.read(2))[0],struct.unpack("<l",Mser.read(4))[0]
-
+	print struct.unpack(">H",Mser.read(2))[0],struct.unpack(">l",Mser.read(4))[0]
+	#print struct.unpack("<B",Mser.read(1))[0],struct.unpack("<B",Mser.read(1))[0],struct.unpack("<l",Mser.read(4))[0]
+	
 
 
 
