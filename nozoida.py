@@ -134,7 +134,7 @@ def check():
         print(p)
 
     try:
-        gstt.sernozoid = next(list_ports.grep("ACM0"))
+        gstt.sernozoid = next(list_ports.grep("ACM1"))
         print "Serial Picked for Nozoid :",gstt.sernozoid[0]
         Mser = serial.Serial(gstt.sernozoid[0],115200)
         #Mser = serial.Serial(gstt.sernozoid[0],115200,timeout=10)

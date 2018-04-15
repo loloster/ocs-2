@@ -69,7 +69,8 @@ ports = list(list_ports.comports())
 #    print(p)
 
 try:
-    gstt.sernozoid = next(list_ports.grep("ACM0"))
+    #gstt.sernozoid = next(list_ports.grep("ACM1"))
+    gstt.sernozoid = next(list_ports.grep("ACM?"))
     print "Serial Picked for Nozoid :",gstt.sernozoid[0]
     Mser = serial.Serial(gstt.sernozoid[0],115200)
     #Mser = serial.Serial(gstt.sernozoid[0],115200,timeout=5)
