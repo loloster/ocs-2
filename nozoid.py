@@ -68,11 +68,11 @@ ports = list(list_ports.comports())
 for p in ports:
     print(p)
 
-raw_input("Will try to select Last Serial Port\nPress Enter to continue...")
+#raw_input("Will try to select Last Serial Port\nPress Enter to continue...")
 
 try:
-    #gstt.sernozoid = next(list_ports.grep("ACM1"))
-    sernozoid = max(enumerate(list_ports.grep("tty*")))[1] #return the last serial port (see https://stackoverflow.com/questions/2138873/cleanest-way-to-get-last-item-from-python-iterator)
+    sernozoid = next(list_ports.grep("ACM1"))
+    #sernozoid = max(enumerate(list_ports.grep("tty*")))[1] #return the last serial port (see https://stackoverflow.com/questions/2138873/cleanest-way-to-get-last-item-from-python-iterator)
     print "Serial Picked for Nozoid :",sernozoid[0]
     Mser = serial.Serial(sernozoid[0],115200)
     #Mser = serial.Serial(gstt.sernozoid[0],115200,timeout=5)
@@ -81,7 +81,7 @@ try:
     
 #    Mser.open()
     print(Mser.is_open)
-    raw_input("Press Enter to continue...")
+#    raw_input("Press Enter to continue...")
 
     print "In_Waiting garbage msg # at the serial opening:",Mser.in_waiting
     #print "Out_Waiting garbage msg # at the serial opening:",Mser.out_waiting
