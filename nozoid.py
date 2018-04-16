@@ -65,20 +65,28 @@ def MSerialinProcess():
 print("")
 print("Available serial devices")
 ports = list(list_ports.comports())
-# for p in ports:
-#    print(p)
+for p in ports:
+    print(p)
+
+raw_input("Will try to select Last Serial Port\nPress Enter to continue...")
 
 try:
     #gstt.sernozoid = next(list_ports.grep("ACM1"))
-    gstt.sernozoid = next(list_ports.grep("ACM?"))
-    print "Serial Picked for Nozoid :",gstt.sernozoid[0]
-    Mser = serial.Serial(gstt.sernozoid[0],115200)
+    sernozoid = max(enumerate(list_ports.grep("tty*")))[1] #return the last serial port (see https://stackoverflow.com/questions/2138873/cleanest-way-to-get-last-item-from-python-iterator)
+    print "Serial Picked for Nozoid :",sernozoid[0]
+    Mser = serial.Serial(sernozoid[0],115200)
     #Mser = serial.Serial(gstt.sernozoid[0],115200,timeout=5)
     print "Serial connection..."
     print "Device..." 
+    
+#    Mser.open()
+    print(Mser.is_open)
+    raw_input("Press Enter to continue...")
 
     print "In_Waiting garbage msg # at the serial opening:",Mser.in_waiting
-    while Mser.out_waiting != 0 or Mser.in_waiting != 0:
+    #print "Out_Waiting garbage msg # at the serial opening:",Mser.out_waiting
+    #while Mser.out_waiting != 0 or Mser.in_waiting != 0:
+    while Mser.in_waiting != 0:
         print "Still",Mser.in_waiting,"In_Waiting msg to flush at the opening"
 	Mser.read()
 
@@ -87,7 +95,8 @@ try:
     print "In_Waiting garbage msg # after 0xFF sent:",Mser.in_waiting
     time.sleep(1)
 
-    while Mser.out_waiting != 0 or Mser.in_waiting != 0:
+    #while Mser.out_waiting != 0 or Mser.in_waiting != 0:
+    while Mser.in_waiting != 0:
         print "Still",Mser.in_waiting,"In_Waiting garbage msg after 0xFF sent"
 	Mser.read()
 
