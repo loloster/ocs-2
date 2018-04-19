@@ -8,11 +8,13 @@
 # Au debut ca envoie rien.
 
 # FF arrête tous les envois en cours
-# A0 a #AC  Les trucs qui oscillent 
-# 0 à 31 les knobs : 2 messages FF numeroknob 00 00 00FF
+# A0 a AC  Les trucs qui oscillent 
+# 0 à 31 les knobs : 2 messages FF numeroknob 00 FF
 # N'importe quelle autre valeur va arrêter un 
-# F0 Donne le type de nozoid  "MMO3" : FF F0 4D 4D 4F 33
-
+# F0 Donne le type de nozoid  "MMO3" : FF F0 4D 33
+# F1 ralenti
+# F2 accélère
+# 
 
 import sys
 from serial.tools import list_ports
@@ -23,13 +25,15 @@ import struct
 
 cc = [0] * 256
 
+NozMsg=[0,0,0,0]
+
 def twoDigitHex( number ):
    return '%02x' % number
    
 def send(channel):
     Mser.write([channel]) 
     
-def NozMsg(channel,value):
+def XXXNozMsg(channel,value):
     
     print channel
     print value
@@ -55,7 +59,7 @@ def MSerialinProcess():
             sermsg[5]= twoDigitHex(ord(Mser.read()[0]))
             
             valhxx = "".join((str(sermsg[2]),str(sermsg[3]),str(sermsg[4]),str(sermsg[5])))
-            NozMsg(sermsg[1],valhxx)
+            XXXNozMsg(sermsg[1],valhxx)
             
         time.sleep(0.02)
         
@@ -71,7 +75,7 @@ for p in ports:
 #raw_input("Will try to select Last Serial Port\nPress Enter to continue...")
 
 try:
-    sernozoid = next(list_ports.grep("ACM1"))
+    sernozoid = next(list_ports.grep("ACM0"))
     #sernozoid = max(enumerate(list_ports.grep("tty*")))[1] #return the last serial port (see https://stackoverflow.com/questions/2138873/cleanest-way-to-get-last-item-from-python-iterator)
     print "Serial Picked for Nozoid :",sernozoid[0]
     Mser = serial.Serial(sernozoid[0],115200)
@@ -113,7 +117,8 @@ try:
 
     for i in range(2):
 	print "!!"
-        print twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0]))
+        #print twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0]))
+        print twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0]))
 
 
     print "In_Waiting garbage msg # after cleaning up try:",Mser.in_waiting
@@ -136,19 +141,57 @@ try:
 #    raw_input("Press Enter to continue...")
 
 
-    #Mser.write([0xA0]) #mod_osc1
+    Mser.write([0xA0]) #mod_osc1
     #Mser.write([0xA1]) #mod_osc2
     #Mser.write([0xA2]) #mod_osc3
 
-    #Mser.write([0xA3]) #mod_lfo1
-    #Mser.write([0xA4]) #mod_lfo2
+    Mser.write([0xA3]) #mod_lfo1
+    Mser.write([0xA4]) #mod_lfo2
     #Mser.write([0xA5]) #mod_lfo3
 
     while True:
         #print twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0]))
 	#int(Mser.read()[0],16)    
 	#print(ord(Mser.read(2)[0]))
-	print struct.unpack(">H",Mser.read(2))[0],struct.unpack(">l",Mser.read(4))[0]
+	
+	#NozMsg[0]=Mser.read()
+	#NozMsg[1]=Mser.read()
+	#NozMsg[2]=Mser.read()
+	#NozMsg[3]=Mser.read()
+	NozMsg = Mser.read(4)
+	#print NozMsg.encode('hex')
+
+	#print type(NozMsg[0])
+	#NozMsg[4]=Mser.read()
+	#NozMsg[5]=Mser.read()
+
+	#print struct.unpack(">H",NozMsg[0],NozMsg[1])
+
+	#print struct.unpack(">H",Mser.read(2))[0],struct.unpack(">l",Mser.read(4))[0]
+	#print struct.unpack(">H",Mser.read(2))[0],struct.unpack(">h",Mser.read(2))[0]
+
+        #print twoDigitHex(ord(NozMsg[0])), twoDigitHex(ord(NozMsg[1]))
+
+	#print struct.unpack(struct.unpack(">H",NozMsg[2:4]))[0]
+
+	#print "".join(NozMsg[2:4])
+	#print twoDigitHex(ord(NozMsg[1]))
+	#if NozMsg[1] < 160:
+	if ord(NozMsg[1]) < 160:
+		#print "NozMsg < 160"
+		#print NozMsg[1]
+	        #print twoDigitHex(ord(NozMsg[0])), twoDigitHex(ord(NozMsg[1])), struct.unpack(">H","".join(NozMsg[2:4]))[0]
+		(val,) = struct.unpack_from('>H', NozMsg, 2)
+		print NozMsg[0:2].encode('hex'), val
+	else:  
+		#print "NozMsg > 160"
+		#print NozMsg[1]
+        	#print twoDigitHex(ord(NozMsg[0])), twoDigitHex(ord(NozMsg[1])), struct.unpack(">h","".join(NozMsg[2:4]))[0]
+		(val,) = struct.unpack_from('>h', NozMsg, 2)
+		print NozMsg[0:2].encode('hex'), val
+
+	#print NozMsg[2:4]
+
 	#print struct.unpack("<B",Mser.read(1))[0],struct.unpack("<B",Mser.read(1))[0],struct.unpack("<l",Mser.read(4))[0]
 	
 
