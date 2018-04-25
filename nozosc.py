@@ -25,11 +25,14 @@ import struct
 from OSC import OSCServer, OSCClient, OSCMessage
 import types
 
-oscIPin = socket.gethostbyname(socket.gethostname())
+#oscIPin = socket.gethostbyname(socket.gethostname())
+oscIPin = "192.168.42.194"
+#oscIPin = ""
 oscPORTin = 8001
 oscpathin = ""
 
-oscIPout = ""
+#oscIPout = socket.gethostbyname(socket.gethostname())
+oscIPout = "192.168.42.194"
 oscPORTout = 8002
 
 oscdevice = 0
@@ -72,9 +75,12 @@ osclient = OSCClient()
 osclientme = OSCClient()
 oscmsg = OSCMessage()
 
+oscaddress="/on"
 
 # sendosc(oscaddress, [arg1, arg2,...])
+
 def sendosc(oscaddress,oscargs):
+#def sendosc(oscargs):
     
     # also works : osclient.send(OSCMessage("/led", oscargs))
 
@@ -97,6 +103,7 @@ def sendosc(oscaddress,oscargs):
 osclientme.connect((oscIPin, oscPORTin)) 
 
 def sendme(oscaddress,oscargs):
+#def sendme(oscargs):
         
     oscmsg = OSCMessage()
     oscmsg.setAddress(oscaddress)
@@ -230,31 +237,7 @@ oscserver.addMsgHandler( "/down", down )
 #
 # Running...
 #
-
-# TODO : Process events coming from Nozoid  in a separate thread. 
-def MSerialinProcess():
-
-    MESSAGE = 0xFF
     
-    sermsg = [0,0,0,0,0,0]
-    
-    # pack bytes from serial port by 4. 
-    
-    while True:
-        sermsg[0] = ord(Mser.read())
-        if sermsg[0] == MESSAGE:
-
-            sermsg[1]= ord(Mser.read()[0])
-            sermsg[2]= twoDigitHex(ord(Mser.read()[0]))
-            sermsg[3]= twoDigitHex(ord(Mser.read()[0]))
-            sermsg[4]= twoDigitHex(ord(Mser.read()[0]))
-            sermsg[5]= twoDigitHex(ord(Mser.read()[0]))
-            
-            valhxx = "".join((str(sermsg[2]),str(sermsg[3]),str(sermsg[4]),str(sermsg[5])))
-            XXXNozMsg(sermsg[1],valhxx)
-            
-        time.sleep(0.02)
-        
         
 # Search for nozoid
 
@@ -268,7 +251,9 @@ for p in ports:
 try:
 
 	# Find serial port
-    sernozoid = next(list_ports.grep("sbmodemFA131"))
+    #sernozoid = next(list_ports.grep("sbmodemFA131"))
+    #sernozoid = next(list_ports.grep("sbmodem"))
+    sernozoid = next(list_ports.grep("ACM1"))
     print "Serial Picked for Nozoid :",sernozoid[0]
     Mser = serial.Serial(sernozoid[0],115200)
     #Mser = serial.Serial(gstt.sernozoid[0],115200,timeout=5)
@@ -278,27 +263,36 @@ try:
 
 	# Serial port sync
     print "In_Waiting garbage msg # at the serial opening:",Mser.in_waiting
+    
     while Mser.in_waiting != 0:
         print "Still",Mser.in_waiting,"In_Waiting msg to flush at the opening"
-	Mser.read()
+        Mser.read()
 
-	sendme("/stop")
-	sendme("/name")
+    #sendme("/stop",1)
+    #sendme("/on",1)
 
-	# infinite loop display Nozoid message
-	# Todo transfer to a separate thread.
+    # infinite loop display Nozoid message
+    # Todo transfer to a separate thread.
+    Mser.write([0xFF])
+    print ("asking for with nozoid type...")
+    Mser.write([0xF0])
+
     while True:
-	NozMsg = Mser.read(4)
-	osc_frame()
-	if ord(NozMsg[1]) < 160:
-		(val,) = struct.unpack_from('>H', NozMsg, 2)
-		print ''.join(("/nozoid/knob/",str(ord(NozMsg[1]))," ",NozMsg[0:2].encode('hex'), val))
-		sendosc(''.join(("/nozoid/knob/",str(ord(NozMsg[1]))," ",NozMsg[0:2].encode('hex'), val)))
-	else:  
-		(val,) = struct.unpack_from('>h', NozMsg, 2)
-		print ''.join(("/nozoid/oscitruc/",str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex'), val))
-		sendosc(''.join(("/nozoid/oscitruc/",str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex'), val)))
-    
+
+        print "loop"
+        NozMsg = Mser.read(4)
+        osc_frame()
+        if ord(NozMsg[1]) < 160:
+            (val,) = struct.unpack_from('>H', NozMsg, 2)
+            print ''.join(("/nozoid/knob/",str(ord(NozMsg[1]))," ",NozMsg[0:2].encode('hex'),str(val)))
+            sendosc(''.join(("/nozoid/knob/",str(ord(NozMsg[1]))," ",NozMsg[0:2].encode('hex'),str(val))))
+        else:  
+            (val,) = struct.unpack_from('>h', NozMsg, 2)
+            #print type(NozMsg[0:2].encode('hex'))
+            #print type(ord(val))
+            print ''.join(("/nozoid/oscitruc/",str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex'),str(val)))
+            #sendosc(''.join(("/nozoid/oscitruc/",str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex'),str(val))))
+
 except StopIteration:
     print ("No Nozoid device found")
     Mser = False

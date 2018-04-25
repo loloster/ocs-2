@@ -75,7 +75,7 @@ for p in ports:
 #raw_input("Will try to select Last Serial Port\nPress Enter to continue...")
 
 try:
-    sernozoid = next(list_ports.grep("ACM0"))
+    sernozoid = next(list_ports.grep("ACM1"))
     #sernozoid = max(enumerate(list_ports.grep("tty*")))[1] #return the last serial port (see https://stackoverflow.com/questions/2138873/cleanest-way-to-get-last-item-from-python-iterator)
     print "Serial Picked for Nozoid :",sernozoid[0]
     Mser = serial.Serial(sernozoid[0],115200)
