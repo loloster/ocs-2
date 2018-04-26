@@ -13,7 +13,7 @@
 //
 //    You should have received a copy of the GNU General Public License
 //    along with OCS-2 firmware.  If not, see <http://www.gnu.org/licenses/>.
-// --------------------------------------------------------------------------
+// -------------------------------------------------------------------------
 
 uint32_t LFO3_phase_old;
 

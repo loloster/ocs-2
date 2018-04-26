@@ -25,14 +25,14 @@ import struct
 from OSC import OSCServer, OSCClient, OSCMessage
 import types
 
-#oscIPin = socket.gethostbyname(socket.gethostname())
-oscIPin = "192.168.42.194"
-#oscIPin = ""
+#oscIPin = "192.168.42.194"
+#oscIPin = "127.0.0.1"
+oscIPin = socket.gethostbyname(socket.gethostname())
 oscPORTin = 8001
 oscpathin = ""
 
-#oscIPout = socket.gethostbyname(socket.gethostname())
-oscIPout = "192.168.42.194"
+#oscIPout = ""
+oscIPout = socket.gethostbyname(socket.gethostname())
 oscPORTout = 8002
 
 oscdevice = 0
@@ -42,9 +42,11 @@ NozMsg=[0,0,0,0]
 print("")
 print("OSCServer")
 print ("M controller is receiving on ", oscIPin, ":",str(oscPORTin))
-oscserver = OSCServer( (oscIPin, 8001) )
+#oscserver = OSCServer( ("192.168.42.194", 8001) )
+oscserver = OSCServer( (oscIPin, oscPORTin) )
 oscserver.timeout = 0
 OSCRunning = True
+print oscserver.address()
 
 
 def handle_timeout(self):
@@ -79,8 +81,8 @@ oscaddress="/on"
 
 # sendosc(oscaddress, [arg1, arg2,...])
 
-def sendosc(oscaddress,oscargs):
-#def sendosc(oscargs):
+#def sendosc(oscaddress,oscargs):
+def sendosc(oscargs):
     
     # also works : osclient.send(OSCMessage("/led", oscargs))
 
@@ -109,7 +111,7 @@ def sendme(oscaddress,oscargs):
     oscmsg.setAddress(oscaddress)
     oscmsg.append(oscargs)
     
-    print "sending me: ",oscmsg
+    print "sending me: ",oscmsg, oscargs
     try:
         osclientme.sendto(oscmsg, (oscIPin, oscPORTin))
         oscmsg.clearData()
@@ -122,9 +124,12 @@ def sendme(oscaddress,oscargs):
   
 # RAW OSC Frame available ? 
 def osc_frame():
+
     # clear timed_out flag
+    print "frame"
     oscserver.timed_out = False
     # handle all pending requests then return
+    
     while not oscserver.timed_out:
         oscserver.handle_request()
 
@@ -226,7 +231,7 @@ def status(text):
 
 oscserver.addMsgHandler( "/on", on )
 oscserver.addMsgHandler( "/stop", stop )
-oscserver.addMsgHandler("default", handler)
+oscserver.addMsgHandler( "default", handler)
 oscserver.addMsgHandler( "/name", name )
 oscserver.addMsgHandler( "/lfo", lfo )
 oscserver.addMsgHandler( "/osc", osc )
@@ -274,24 +279,33 @@ try:
     # infinite loop display Nozoid message
     # Todo transfer to a separate thread.
     Mser.write([0xFF])
-    print ("asking for with nozoid type...")
+    #print ("asking for with nozoid type...")
     Mser.write([0xF0])
-
+    #sendme("/lfo",1)
+    sendme("/name","")
+    
     while True:
 
         print "loop"
         NozMsg = Mser.read(4)
         osc_frame()
+        
         if ord(NozMsg[1]) < 160:
             (val,) = struct.unpack_from('>H', NozMsg, 2)
             print ''.join(("/nozoid/knob/",str(ord(NozMsg[1]))," ",NozMsg[0:2].encode('hex'),str(val)))
             sendosc(''.join(("/nozoid/knob/",str(ord(NozMsg[1]))," ",NozMsg[0:2].encode('hex'),str(val))))
-        else:  
+        
+        if ord(NozMsg[1]) > 160:
+        
             (val,) = struct.unpack_from('>h', NozMsg, 2)
             #print type(NozMsg[0:2].encode('hex'))
             #print type(ord(val))
             print ''.join(("/nozoid/oscitruc/",str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex'),str(val)))
-            #sendosc(''.join(("/nozoid/oscitruc/",str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex'),str(val))))
+            sendosc(''.join(("/nozoid/oscitruc/",str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex'),str(val))))
+
+        if ord(NozMsg[1]) == 0xF0:   
+            print ''.join((NozMsg[2],NozMsg[3]))
+
 
 except StopIteration:
     print ("No Nozoid device found")
