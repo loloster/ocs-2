@@ -190,15 +190,16 @@ def name(path, tags, args, source):
 
     print ("asking for with nozoid type...")
     Mser.write([0xF0])
-    time.sleep(1)
-    print "In_Waiting garbage msg # after 0xF0 sent:",Mser.in_waiting
-    time.sleep(1)
-    for i in range(2):
-        print "!!"
-        print twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0]))
-    print "In_Waiting garbage msg # after cleaning up try:",Mser.in_waiting
-    time.sleep(1)
-    
+#    time.sleep(1)
+#    print "In_Waiting garbage msg # after 0xF0 sent:",Mser.in_waiting
+#    time.sleep(1)
+#    for i in range(2):
+#        print "!!"
+#        print twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0])), twoDigitHex(ord(Mser.read()[0]))
+#    print "In_Waiting garbage msg # after cleaning up try:",Mser.in_waiting
+#    time.sleep(1)
+
+#    print ''.join((NozMsg[2],NozMsg[3]))
     
 # /lfo
 def lfo(path, tags, args, source):
@@ -288,8 +289,10 @@ try:
     # Todo transfer to a separate thread.
     Mser.write([0xFF])
     #print ("asking for with nozoid type...")
+
+    #the serial way please
     Mser.write([0xF0])
-    #sendme("/lfo",1)
+    #or the OSC way please !
     sendme("/name","")
     
     while True:
@@ -305,8 +308,7 @@ try:
             print '/knob'.join(("/nozoid/knob/",str(ord(NozMsg[1]))," ",NozMsg[0:2].encode('hex'),":",str(val)))
             sendosc("/knob",''.join(("/nozoid/knob/",str(ord(NozMsg[1]))," ",NozMsg[0:2].encode('hex'),":",str(val))))
         
-         if ord(NozMsg[1]) > 160:
-        
+         if ord(NozMsg[1]) >= 0xA0 and ord(NozMsg[1]) < 0xF0:
             (val,) = struct.unpack_from('>h', NozMsg, 2)
             #print type(NozMsg[0:2].encode('hex'))
             #print type(ord(val))
@@ -315,6 +317,7 @@ try:
 
          if ord(NozMsg[1]) == 0xF0:   
             print ''.join((NozMsg[2],NozMsg[3]))
+	    sendosc("/name",''.join((NozMsg[2],NozMsg[3])))
 
 
 except StopIteration:
