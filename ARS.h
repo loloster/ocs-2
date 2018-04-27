@@ -39,56 +39,56 @@ union uint64 {
 };
 
 enum adc_pos {
-  VCO1_FQ,
-  VCO1_MOD1,
-  VCO1_MOD2,
-  PORTAMENTO_VALUE,
-  VCO2_FQ,
-  VCO2_MOD1,
-  VCO2_MOD2,
-  VCF_FQ,
-  VCF_Q,
-  VCF_MOD1,
-  VCF_MOD2,
-  LFO1_FQ,
-  LFO1_WF,
-  LFO1_SYM,
-  ADSR_A,
-  LFO2_FQ,
-  LFO2_WF,
-  LFO2_SYM,
-  ADSR_D,
-  LFO3_FQ,
-  LFO3_MOD,
-  EFFECT1,
-  ADSR_S,
-  CVG1,
-  CVG2,
-  EFFECT2,
-  ADSR_R,
-  VCA_MIX,
-  VCA_MOD,
-  VCA_GAIN,
-  LDR,
-  EXT_1,
-  EXT_2,
-  EXT_3
+  VCO1_FQ,          //0x00
+  VCO1_MOD1,        //0x01
+  VCO1_MOD2,        //0x02
+  PORTAMENTO_VALUE, //0x03
+  VCO2_FQ,          //0x04
+  VCO2_MOD1,        //0x05
+  VCO2_MOD2,        //0x06
+  VCF_FQ,           //0x07
+  VCF_Q,            //0x08
+  VCF_MOD1,         //0x09
+  VCF_MOD2,         //0x0A
+  LFO1_FQ,          //0x0B
+  LFO1_WF,          //0x0C
+  LFO1_SYM,         //0x0D
+  ADSR_A,           //0x0E
+  LFO2_FQ,          //0x0F
+  LFO2_WF,          //0x10
+  LFO2_SYM,         //0x11
+  ADSR_D,           //0x12
+  LFO3_FQ,          //0x13
+  LFO3_MOD,         //0x14
+  EFFECT1,          //0x15
+  ADSR_S,           //0x16
+  CVG1,             //0x17
+  CVG2,             //0x18
+  EFFECT2,          //0x19
+  ADSR_R,           //0x1A
+  VCA_MIX,          //0x1B
+  VCA_MOD,          //0x1C
+  VCA_GAIN,         //0x1D
+  LDR,              //0x1E
+  EXT_1,            //0x1F
+  EXT_2,            //0x20
+  EXT_3             //0x21
 };
 
 enum modulation_value {
-  mod_VCO1,
-  mod_VCO2,
-  mod_LFO1,
-  mod_LFO2,
-  mod_LFO3,
-  mod_CVG,
-  mod_ADSR,
-  mod_LDR, // light
-  mod_ENV, // audio in envelope
-  mod_VEL, // midi velocity
-  mod_EXT1,
-  mod_EXT2,
-  mod_EXT3
+  mod_VCO1,       //0xA0
+  mod_VCO2,       //0xA1
+  mod_LFO1,       //0xA2
+  mod_LFO2,       //0xA3
+  mod_LFO3,       //0xA4
+  mod_CVG,        //0xA5
+  mod_ADSR,       //0xA6
+  mod_LDR, // light   //0xA7
+  mod_ENV, // audio in envelope //0xA8
+  mod_VEL, // midi velocity  //0xA9
+  mod_EXT1,       //0xAA
+  mod_EXT2,       //0xAB
+  mod_EXT3        //0xAC
 };
 
 enum modulation_adresse {

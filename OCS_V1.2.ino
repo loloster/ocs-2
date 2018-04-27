@@ -296,6 +296,8 @@ inline void main_loop() { // as fast as possible
         case 29:
         case 30:
         case 31:
+        case 32:
+        case 33:
         if (0 < shotguncounter) {
           SerialUSB.write(0xFF);
           SerialUSB.write((byte)shotgun[i]);

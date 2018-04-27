@@ -77,12 +77,12 @@ osclient = OSCClient()
 osclientme = OSCClient()
 oscmsg = OSCMessage()
 
-oscaddress="/on"
+#oscaddress="/on"
 
 # sendosc(oscaddress, [arg1, arg2,...])
 
-#def sendosc(oscaddress,oscargs):
-def sendosc(oscargs):
+def sendosc(oscaddress,oscargs):
+#def sendosc(oscargs):
     
     # also works : osclient.send(OSCMessage("/led", oscargs))
 
@@ -126,7 +126,7 @@ def sendme(oscaddress,oscargs):
 def osc_frame():
 
     # clear timed_out flag
-    print "frame"
+    #print "frame"
     oscserver.timed_out = False
     # handle all pending requests then return
     
@@ -147,7 +147,7 @@ def handler(path, tags, args, source):
 	pathlength = len(oscpath)
 	print ""
 	print "default handler"
-	print path, pathlength, oscpath, args
+	print "path:",path,"pathlength:", pathlength,"oscpath:", oscpath,"args:", args
 
 	# /cc/number value
 	if oscpath[1] == "cc" :
@@ -202,25 +202,32 @@ def name(path, tags, args, source):
     
 # /lfo
 def lfo(path, tags, args, source):
+	print "LFO"
+	print "P:",path,",T:",tags,",A:",args,",S:",source
 	print ("LFO ", args[0], "asked")
 	Mser.write([0xA2 + int(args[0])]) # 0xA3 : LFO 1 / 0xA4 : LFO 2  / 0xA5 : LFO 3 
 
 
 # /osc
 def osc(path, tags, args, source):
-	print ("LFO ", args[0], "asked")
+	print "OSC"
+	print ("OSC ", args[0], "asked")
 	Mser.write([0x9F + int(args[0])]) # 0xA0 : OSC 1 / 0xA1 : OSC 2  / 0xA2 : OSC 3 
 
 # /down
 def down(path, tags, args, source):
-	print ("LFO ", args[0], "asked")
+	print ("DOWN ", args[0], "asked")
 	Mser.write([0x9F + int(args[0])]) # 0xA0 : OSC 1 / 0xA1 : OSC 2  / 0xA2 : OSC 3 
 
 # /up
 def up(path, tags, args, source):
-	print ("LFO ", args[0], "asked")
+	print ("UP ", args[0], "asked")
 	Mser.write([0x9F + int(args[0])]) # 0xA0 : OSC 1 / 0xA1 : OSC 2  / 0xA2 : OSC 3 
 
+# /knob
+def knob(path, tags, args, source):
+	print ("KNOB", args[0], "asked")
+	Mser.write([0 + int(args[0])]) # 0xA0 : OSC 1 / 0xA1 : OSC 2  / 0xA2 : OSC 3 
 
 
 # Send text to status display widget
@@ -231,12 +238,13 @@ def status(text):
 
 oscserver.addMsgHandler( "/on", on )
 oscserver.addMsgHandler( "/stop", stop )
-oscserver.addMsgHandler( "default", handler)
+oscserver.addMsgHandler( "default", handler )
 oscserver.addMsgHandler( "/name", name )
 oscserver.addMsgHandler( "/lfo", lfo )
 oscserver.addMsgHandler( "/osc", osc )
 oscserver.addMsgHandler( "/up", up )
 oscserver.addMsgHandler( "/down", down )
+oscserver.addMsgHandler( "/knob", knob )
 
 
 #
@@ -286,24 +294,26 @@ try:
     
     while True:
 
-        print "loop"
-        NozMsg = Mser.read(4)
+        #print "loop"
         osc_frame()
-        
-        if ord(NozMsg[1]) < 160:
+
+	if Mser.in_waiting != 0:        
+         NozMsg = Mser.read(4)
+
+         if ord(NozMsg[1]) < 160:
             (val,) = struct.unpack_from('>H', NozMsg, 2)
-            print ''.join(("/nozoid/knob/",str(ord(NozMsg[1]))," ",NozMsg[0:2].encode('hex'),str(val)))
-            sendosc(''.join(("/nozoid/knob/",str(ord(NozMsg[1]))," ",NozMsg[0:2].encode('hex'),str(val))))
+            print '/knob'.join(("/nozoid/knob/",str(ord(NozMsg[1]))," ",NozMsg[0:2].encode('hex'),":",str(val)))
+            sendosc("/knob",''.join(("/nozoid/knob/",str(ord(NozMsg[1]))," ",NozMsg[0:2].encode('hex'),":",str(val))))
         
-        if ord(NozMsg[1]) > 160:
+         if ord(NozMsg[1]) > 160:
         
             (val,) = struct.unpack_from('>h', NozMsg, 2)
             #print type(NozMsg[0:2].encode('hex'))
             #print type(ord(val))
-            print ''.join(("/nozoid/oscitruc/",str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex'),str(val)))
-            sendosc(''.join(("/nozoid/oscitruc/",str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex'),str(val))))
+            print '/osc'.join(("/nozoid/oscitruc/",str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex'),":",str(val)))
+            sendosc("/osc",''.join(("/nozoid/oscitruc/",str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex'),":",str(val))))
 
-        if ord(NozMsg[1]) == 0xF0:   
+         if ord(NozMsg[1]) == 0xF0:   
             print ''.join((NozMsg[2],NozMsg[3]))
 
 
