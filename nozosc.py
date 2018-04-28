@@ -24,6 +24,7 @@ import gstt,socket
 import struct
 from OSC import OSCServer, OSCClient, OSCMessage
 import types
+from sys import platform
 
 #oscIPin = "192.168.42.194"
 #oscIPin = "127.0.0.1"
@@ -32,8 +33,10 @@ oscPORTin = 8001
 oscpathin = ""
 
 #oscIPout = ""
-oscIPout = socket.gethostbyname(socket.gethostname())
-oscPORTout = 8002
+oscIPout = "10.255.255.194"
+#oscIPout = socket.gethostbyname(socket.gethostname())
+oscPORTout = 8001
+#oscPORTout = 8002
 
 oscdevice = 0
 
@@ -86,9 +89,40 @@ def sendosc(oscaddress,oscargs):
     
     # also works : osclient.send(OSCMessage("/led", oscargs))
 
+    oscpath = oscaddress.split("/")
+    pathlength = len(oscpath)
+
     oscmsg = OSCMessage()
-    oscmsg.setAddress(oscaddress)
-    oscmsg.append(oscargs)
+
+    if oscpath[2] == "name":
+	print "we are asked to send a name"
+	oscmsg.setAddress(oscaddress)
+	oscmsg.append(oscargs)
+
+    if oscpath[2] == "status":
+	print "we are asked to send a status"
+	oscmsg.setAddress(oscaddress)
+	oscmsg.append(oscargs)
+
+    if oscpath[2] == "knob":
+	print "we are asked to send a knob value"
+	oscmsg.setAddress(''.join((oscaddress,"/",oscargs[0])))
+	oscmsg.append(int(oscargs[1:100]))
+	
+    if oscpath[2] == "osc":
+	#print "we are asked to send continusouly an osc value"
+	oscmsg.setAddress(''.join((oscaddress,"/",oscargs[0])))
+	oscmsg.append(int(oscargs[1:100]))
+	
+    #print "here we are sendosc function"
+    #print "path:",oscaddress,"pathlength:", pathlength,"oscpath:", oscpath,"args:", oscargs
+
+
+    #oscmsg.setAddress(''.join((oscaddress,"/",oscargs)))
+
+    #oscmsg.append(oscargs[0])
+
+    #oscmsg.append(oscargs)
     
     print "sending : ",oscmsg
     try:
@@ -140,7 +174,7 @@ def osc_frame():
 #
    
 # default handler 
-def handler(path, tags, args, source):
+def nozhandler(path, tags, args, source):
 
 	
 	oscpath = path.split("/")
@@ -158,7 +192,7 @@ def handler(path, tags, args, source):
 
 
 # /on
-def on(path, tags, args, source):
+def nozon(path, tags, args, source):
     global oscIPout,oscdevice,controlmatrix
 
     user = ''.join(path.split("/"))
@@ -173,23 +207,24 @@ def on(path, tags, args, source):
     Mser.write([0xF0])
 
 # /stop
-def stop(path, tags, args, source):
+def nozstop(path, tags, args, source):
 
     print ("Stop Com from Nozoid")
     Mser.write([0xFF]) 
-    time.sleep(1)
+#    time.sleep(1)
     print "In_Waiting garbage msg # after 0xFF sent:",Mser.in_waiting
-    time.sleep(1)
+#    time.sleep(1)
 
     while Mser.in_waiting != 0:
         print "Still",Mser.in_waiting,"In_Waiting garbage msg after 0xFF sent"
 	Mser.read()
     
 # /name 
-def name(path, tags, args, source):
+def nozname(path, tags, args, source):
 
-    print ("asking for with nozoid type...")
+    print ("asking for my nozoid name...")
     Mser.write([0xF0])
+
 #    time.sleep(1)
 #    print "In_Waiting garbage msg # after 0xF0 sent:",Mser.in_waiting
 #    time.sleep(1)
@@ -202,7 +237,7 @@ def name(path, tags, args, source):
 #    print ''.join((NozMsg[2],NozMsg[3]))
     
 # /lfo
-def lfo(path, tags, args, source):
+def nozlfo(path, tags, args, source):
 	print "LFO"
 	print "P:",path,",T:",tags,",A:",args,",S:",source
 	print ("LFO ", args[0], "asked")
@@ -210,42 +245,51 @@ def lfo(path, tags, args, source):
 
 
 # /osc
-def osc(path, tags, args, source):
-	print "OSC"
-	print ("OSC ", args[0], "asked")
+def nozosc(path, tags, args, source):
+	#print "OSC"
+	#print ("OSC ", args[0], "asked")
 	Mser.write([0x9F + int(args[0])]) # 0xA0 : OSC 1 / 0xA1 : OSC 2  / 0xA2 : OSC 3 
 
 # /down
-def down(path, tags, args, source):
-	print ("DOWN ", args[0], "asked")
-	Mser.write([0x9F + int(args[0])]) # 0xA0 : OSC 1 / 0xA1 : OSC 2  / 0xA2 : OSC 3 
+def nozdown(path, tags, args, source):
+	#print ("UP ", args[0], "asked")
+	#print "Path:",path,",Tags:",tags,",Args:",args,",Source:",source
+	if args:
+		Mser.write([0xF1,int(args[0])]) # 0xF1 slowing down flow with argument
+	else:
+		Mser.write([0xF1]) # 0xF1 slowing down flow
 
 # /up
-def up(path, tags, args, source):
-	print ("UP ", args[0], "asked")
-	Mser.write([0x9F + int(args[0])]) # 0xA0 : OSC 1 / 0xA1 : OSC 2  / 0xA2 : OSC 3 
+def nozup(path, tags, args, source):
+	#print ("UP ", args[0], "asked")
+	#print "Path:",path,",Tags:",tags,",Args:",args,",Source:",source
+	if args:
+		Mser.write([0xF2,int(args[0])]) # 0xF2 speeding up with argument
+	else:
+		Mser.write([0xF2]) # 0xF2 speeding up flow
 
 # /knob
-def knob(path, tags, args, source):
+def nozknob(path, tags, args, source):
 	print ("KNOB", args[0], "asked")
 	Mser.write([0 + int(args[0])]) # 0xA0 : OSC 1 / 0xA1 : OSC 2  / 0xA2 : OSC 3 
 
 
 # Send text to status display widget
-def status(text):
-    sendosc("/status", text)
+def nozstatus(path, tags, args, source):
+    sendosc("/nozoid/status", args[0])
 
 # registering all OSC message handlers
 
-oscserver.addMsgHandler( "/on", on )
-oscserver.addMsgHandler( "/stop", stop )
-oscserver.addMsgHandler( "default", handler )
-oscserver.addMsgHandler( "/name", name )
-oscserver.addMsgHandler( "/lfo", lfo )
-oscserver.addMsgHandler( "/osc", osc )
-oscserver.addMsgHandler( "/up", up )
-oscserver.addMsgHandler( "/down", down )
-oscserver.addMsgHandler( "/knob", knob )
+oscserver.addMsgHandler( "/nozoid/on", nozon )
+oscserver.addMsgHandler( "/nozoid/stop", nozstop )
+oscserver.addMsgHandler( "default", nozhandler )
+oscserver.addMsgHandler( "/nozoid/name", nozname )
+oscserver.addMsgHandler( "/nozoid/lfo", nozlfo )
+oscserver.addMsgHandler( "/nozoid/osc", nozosc )
+oscserver.addMsgHandler( "/nozoid/up", nozup )
+oscserver.addMsgHandler( "/nozoid/down", nozdown )
+oscserver.addMsgHandler( "/nozoid/knob", nozknob )
+oscserver.addMsgHandler( "/nozoid/status", nozstatus )
 
 
 #
@@ -261,13 +305,14 @@ ports = list(list_ports.comports())
 for p in ports:
     print(p)
 
-
 try:
 
-	# Find serial port
-    #sernozoid = next(list_ports.grep("sbmodemFA131"))
-    #sernozoid = next(list_ports.grep("sbmodem"))
-    sernozoid = next(list_ports.grep("ACM1"))
+    # Find serial port
+    if  platform == 'darwin':
+        sernozoid = next(list_ports.grep("Arduino Due"))
+    if  platform == 'linux2':
+        sernozoid = next(list_ports.grep("ACM"))
+
     print "Serial Picked for Nozoid :",sernozoid[0]
     Mser = serial.Serial(sernozoid[0],115200)
     #Mser = serial.Serial(gstt.sernozoid[0],115200,timeout=5)
@@ -288,12 +333,12 @@ try:
     # infinite loop display Nozoid message
     # Todo transfer to a separate thread.
     Mser.write([0xFF])
-    #print ("asking for with nozoid type...")
 
+    #print ("asking for with nozoid type...")
     #the serial way please
-    Mser.write([0xF0])
+    #Mser.write([0xF0])
     #or the OSC way please !
-    sendme("/name","")
+    sendme("/nozoid/name","")
     
     while True:
 
@@ -305,19 +350,20 @@ try:
 
          if ord(NozMsg[1]) < 160:
             (val,) = struct.unpack_from('>H', NozMsg, 2)
-            print '/knob'.join(("/nozoid/knob/",str(ord(NozMsg[1]))," ",NozMsg[0:2].encode('hex'),":",str(val)))
-            sendosc("/knob",''.join(("/nozoid/knob/",str(ord(NozMsg[1]))," ",NozMsg[0:2].encode('hex'),":",str(val))))
+            #print '/nozoid//knob'.join((str(ord(NozMsg[1]))," ",NozMsg[0:2].encode('hex'),":",str(val)))
+            #sendosc("/nozoid/knob",''.join((str(ord(NozMsg[1])),NozMsg[0:2].encode('hex'),":",str(val))))
+            sendosc("/nozoid/knob",''.join((str(ord(NozMsg[1])),str(val))))
         
          if ord(NozMsg[1]) >= 0xA0 and ord(NozMsg[1]) < 0xF0:
             (val,) = struct.unpack_from('>h', NozMsg, 2)
             #print type(NozMsg[0:2].encode('hex'))
             #print type(ord(val))
-            print '/osc'.join(("/nozoid/oscitruc/",str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex'),":",str(val)))
-            sendosc("/osc",''.join(("/nozoid/oscitruc/",str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex'),":",str(val))))
+            #print '/nozoid/oscitruc'.join((str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex'),":",str(val)))
+            sendosc("/nozoid/osc",''.join((str(ord(NozMsg[1])-0x9F),str(val))))
 
          if ord(NozMsg[1]) == 0xF0:   
-            print ''.join((NozMsg[2],NozMsg[3]))
-	    sendosc("/name",''.join((NozMsg[2],NozMsg[3])))
+		print ''.join((NozMsg[2],NozMsg[3]))
+		sendosc("/nozoid/name",''.join((NozMsg[2],NozMsg[3])))
 
 
 except StopIteration:

@@ -141,12 +141,12 @@ try:
 #    raw_input("Press Enter to continue...")
 
 
-    Mser.write([0xA0]) #mod_osc1
+    #Mser.write([0xA0]) #mod_osc1
     #Mser.write([0xA1]) #mod_osc2
     #Mser.write([0xA2]) #mod_osc3
 
-    Mser.write([0xA3]) #mod_lfo1
-    Mser.write([0xA4]) #mod_lfo2
+    #Mser.write([0xA3]) #mod_lfo1
+    #Mser.write([0xA4]) #mod_lfo2
     #Mser.write([0xA5]) #mod_lfo3
 
     while True:

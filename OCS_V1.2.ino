@@ -103,7 +103,8 @@ uint32_t flash_lock_bit;
 
   // for incoming serial data  
   //int incomingByte = 0;//maybe should be set to unsigned ? and why not use byte type !?
-  byte incomingByte = 0;
+  byte incomingByte = 0xFF;
+  byte incomingByte1 = 0; //when receiving an argument to the command (for instance 0xF1 0xFF ie. slowing down loop 255x)
   
   // main loop "jumper"
   // high value means slow or low resolution output
@@ -170,7 +171,8 @@ void setup() {
   start_dac();
 
   #ifdef serialout
-    Serial.begin(9600);
+    //Serial.begin(9600);
+    Serial.begin(115200);
     SerialUSB.begin(115200);
     Serial.println("Hey! Hey!");
     Serial.println("OCS-2!");
@@ -352,7 +354,10 @@ inline void main_loop() { // as fast as possible
         if (0 < shotguncounter) {
           if (!(SerialUSB.available() > 0))
             slowloop++;
-            else slowloop += SerialUSB.read();
+            else {
+              incomingByte1 = SerialUSB.read();
+              slowloop += incomingByte1;
+            }
 
         Serial.print("Slowing down shotgun:");
         Serial.println(slowloop);
@@ -364,7 +369,10 @@ inline void main_loop() { // as fast as possible
         if (0 < shotguncounter) {
           if (!(SerialUSB.available() > 0))
             slowloop = (1 < slowloop) ? --slowloop : (shotgun[2] == 0xFF) ? 0 : 1;
-            else slowloop -= SerialUSB.read();
+            else {
+              incomingByte1 = SerialUSB.read();
+              slowloop = (incomingByte1 < slowloop) ? (slowloop-incomingByte1) : (shotgun[2] == 0xFF) ? 0 : 1;
+            }
         
         Serial.print("Speeding up shotgun:");
         Serial.println(slowloop);
