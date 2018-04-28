@@ -98,17 +98,28 @@ uint32_t envelope;
 uint32_t flash_lock_bit;
 
 #ifdef serialout
-  // Loop Counter
-  uint32_t loopc;
+  // main Loop Counter bypasser
+  uint16_t loopc=0;
 
   // for incoming serial data  
-  int incomingByte = 0;
-
+  //int incomingByte = 0;//maybe should be set to unsigned ? and why not use byte type !?
+  byte incomingByte = 0;
+  
   // main loop "jumper"
+  // high value means slow or low resolution output
+  // zero is maximum speed
+  // but beware! when sending more than one continuous message
+  // slowloop has to be raised to one (at least on the MMO-3)
   uint16_t slowloop=0;
 
   // shotgun
+  // is were we save the type of message to send on the serial bus
+  // shotgun[0] is were we save the type of non continuous message to send:
+  // aka. knob value ([0x00,0x64(100)[), slower(0xF1)/speedier(0xF2) loop, identifier(0xF0), reinit(0xFF)
+  // shotgun[1,2,3] is were we save the type of continuous message to send (>=0xA0 && <0xF0)
   byte shotgun[4];
+  
+  // keep track of still how much non continuous message has to be sent
   uint8_t shotguncounter=2;
 #endif
 
@@ -217,14 +228,15 @@ inline void main_loop() { // as fast as possible
     if (SerialUSB.available() > 0) {
       //read the incoming byte:
       incomingByte = SerialUSB.read();
-      /*
-      SerialUSB.print("I received: ");
-      SerialUSB.println(incomingByte, DEC);
-      */
+      /**/
+      Serial.print("I received: ");
+      Serial.println(incomingByte, DEC);
+      /**/
       if ((incomingByte < 100) || (incomingByte == 0xF0) || (incomingByte == 0xF1) || (incomingByte == 0xF2)){
+        loopc=slowloop;
         shotguncounter=2;
         shotgun[0]=incomingByte;
-      } else if (incomingByte > 0)
+      } else// if (incomingByte > 0) //pourquoi ce test ?! on n'envoie que des valeurs positives non ? on l'enlève ce 28/04/18
         if (incomingByte == 0xFF) {
           shotgun[0]=0xFF;
           shotgun[1]=0xFF;
@@ -340,7 +352,7 @@ inline void main_loop() { // as fast as possible
         if (0 < shotguncounter) {
           if (!(SerialUSB.available() > 0))
             slowloop++;
-            else slowloop = SerialUSB.read();
+            else slowloop += SerialUSB.read();
 
         Serial.print("Slowing down shotgun:");
         Serial.println(slowloop);
@@ -352,7 +364,7 @@ inline void main_loop() { // as fast as possible
         if (0 < shotguncounter) {
           if (!(SerialUSB.available() > 0))
             slowloop = (1 < slowloop) ? --slowloop : (shotgun[2] == 0xFF) ? 0 : 1;
-            else slowloop = SerialUSB.read();
+            else slowloop -= SerialUSB.read();
         
         Serial.print("Speeding up shotgun:");
         Serial.println(slowloop);
