@@ -317,29 +317,53 @@ def nozknob(path, tags, args, source):
 
 # /X
 def nozX(path, tags, args, source):
-	print args[0]
-	print type(args[0])
-	if args[0] <= 16:
-		Mser.write([0x9F + int(args[0])])
-		print("/nozoid/X/%d") % (0x00 + int(args[0]))
-		sendosc("/nozoid/X",(0x00 + int(args[0])))
+	print args
+	if 0 == len(args):
+		print "Current active X trace set to %d" % gstt.X
 	else:
-		Mser.write([0xE2 + int(args[0])])
-		print("/nozoid/X/%d") % (0x43 + int(args[0]))
-		sendosc("/nozoid/X",(0x43 + int(args[0])))
+		print "Setting active X trace to %d" % args[0]
+		#print type(args[0])
+	#deactivate currently active osc used
+		if gstt.X <= 16:
+			Mser.write([0x9F + gstt.X])
+		else:
+			Mser.write([0xE2 + gstt.X])
+
+		if args[0] <= 16:
+			Mser.write([0x9F + int(args[0])])
+			print("/nozoid/X/%d") % (0x00 + int(args[0]))
+			sendosc("/nozoid/X",(0x00 + int(args[0])))
+		else:
+			Mser.write([0xE2 + int(args[0])])
+			print("/nozoid/X/%d") % (0x43 + int(args[0]))
+			sendosc("/nozoid/X",(0x43 + int(args[0])))
+
+		gstt.X=int(args[0])
 
 # /Y
 def nozY(path, tags, args, source):
-	print args[0]
-	print type(args[0])
-	if args[0] <= 16:
-		Mser.write([0x9F + int(args[0])])
-		print("/nozoid/Y/%d") % (0x00 + int(args[0]))
-		sendosc("/nozoid/Y",(0x00 + int(args[0])))
+	print args
+	if 0 == len(args):
+		print "Current active Y trace set to %d" % gstt.Y
 	else:
-		Mser.write([0xE2 + int(args[0])])
-	        print("/nozoid/Y/%d") % (0x43 + int(args[0]))
-		sendosc("/nozoid/Y",(0x43 + int(args[0])))
+		print "Setting active Y trace to %d" % args[0]
+		#print type(args[0])
+	#deactivate currently active osc used
+		if gstt.Y <= 16:
+			Mser.write([0x9F + gstt.Y])
+		else:
+			Mser.write([0xE2 + gstt.Y])
+
+		if args[0] <= 16:
+			Mser.write([0x9F + int(args[0])])
+			print("/nozoid/Y/%d") % (0x00 + int(args[0]))
+			sendosc("/nozoid/Y",(0x00 + int(args[0])))
+		else:
+			Mser.write([0xE2 + int(args[0])])
+	        	print("/nozoid/Y/%d") % (0x43 + int(args[0]))
+			sendosc("/nozoid/Y",(0x43 + int(args[0])))
+
+		gstt.Y=int(args[0])
 
 # Send text to status display widget
 def nozstatus(path, tags, args, source):

@@ -76,19 +76,19 @@ enum adc_pos {
 };
 
 enum modulation_value {
-  mod_VCO1,       //0xA0
-  mod_VCO2,       //0xA1
-  mod_LFO1,       //0xA2
-  mod_LFO2,       //0xA3
-  mod_LFO3,       //0xA4
-  mod_CVG,        //0xA5
-  mod_ADSR,       //0xA6
-  mod_LDR, // light   //0xA7
-  mod_ENV, // audio in envelope //0xA8
-  mod_VEL, // midi velocity  //0xA9
-  mod_EXT1,       //0xAA
-  mod_EXT2,       //0xAB
-  mod_EXT3        //0xAC
+  mod_VCO1,       //0xA0 //1
+  mod_VCO2,       //0xA1 //2
+  mod_LFO1,       //0xA2 //3
+  mod_LFO2,       //0xA3 //4
+  mod_LFO3,       //0xA4 //5
+  mod_CVG,        //0xA5 //6
+  mod_ADSR,       //0xA6 //7
+  mod_LDR, // light   //0xA7 //8
+  mod_ENV, // audio in envelope //0xA8 //9
+  mod_VEL, // midi velocity  //0xA9 //10
+  mod_EXT1,       //0xAA //11
+  mod_EXT2,       //0xAB //12
+  mod_EXT3        //0xAC //13
 };
 
 enum modulation_adresse {

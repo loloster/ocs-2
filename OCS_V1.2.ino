@@ -384,7 +384,7 @@ inline void main_loop() { // as fast as possible
         }
         break;
 
-        case 0xF3:
+        case 0xF3://17
         SerialUSB.write(0xFF);
         SerialUSB.write((byte)shotgun[i]);
         //SerialUSB.write(VCO1_out >>  24 & 0xFF);
@@ -393,7 +393,7 @@ inline void main_loop() { // as fast as possible
         SerialUSB.write((VCO1_out / 65536) >>  0 & 0xFF);
         break;
 
-        case 0xF4:
+        case 0xF4://18
         SerialUSB.write(0xFF);
         SerialUSB.write((byte)shotgun[i]);
         //SerialUSB.write(VCO2_out >>  24 & 0xFF);
@@ -402,7 +402,7 @@ inline void main_loop() { // as fast as possible
         SerialUSB.write((VCO2_out / 65536) >>  0 & 0xFF);
         break;
 
-        case 0xF6:
+        case 0xF6://20
         SerialUSB.write(0xFF);
         SerialUSB.write((byte)shotgun[i]);
         //SerialUSB.write(VCF_out >>  24 & 0xFF);
@@ -411,16 +411,20 @@ inline void main_loop() { // as fast as possible
         SerialUSB.write((VCF_out / 65536) >>  0 & 0xFF);
         break;
 
-        case 0xF7:
+        case 0xF7://21
         SerialUSB.write(0xFF);
         SerialUSB.write((byte)shotgun[i]);
         //SerialUSB.write(MIX_out >>  24 & 0xFF);
         //SerialUSB.write(MIX_out >>  16 & 0xFF);
-        SerialUSB.write((MIX_out / 65536) >>  8 & 0xFF);
-        SerialUSB.write((MIX_out / 65536) >>  0 & 0xFF);
+        //SerialUSB.write((MIX_out / 65536) >>  8 & 0xFF);
+        //SerialUSB.write((MIX_out / 65536) >>  0 & 0xFF);
+        //à l'usage MIX_out ne semble pas être une valeur long mais plutot short
+        //code have to be checked
+        SerialUSB.write((MIX_out) >>  8 & 0xFF);
+        SerialUSB.write((MIX_out) >>  0 & 0xFF);
         break;
 
-        case 0xF8:
+        case 0xF8://22
         SerialUSB.write(0xFF);
         SerialUSB.write((byte)shotgun[i]);
         //SerialUSB.write(VCA_out >>  24 & 0xFF);
