@@ -389,8 +389,8 @@ inline void main_loop() { // as fast as possible
         SerialUSB.write((byte)shotgun[i]);
         //SerialUSB.write(VCO1_out >>  24 & 0xFF);
         //SerialUSB.write(VCO1_out >>  16 & 0xFF);
-        SerialUSB.write(VCO1_out / 0xFFFF >>  8 & 0xFF);
-        SerialUSB.write(VCO1_out / 0xFFFF >>  0 & 0xFF);
+        SerialUSB.write((VCO1_out / 65536) >>  8 & 0xFF);
+        SerialUSB.write((VCO1_out / 65536) >>  0 & 0xFF);
         break;
 
         case 0xF4:
@@ -398,8 +398,8 @@ inline void main_loop() { // as fast as possible
         SerialUSB.write((byte)shotgun[i]);
         //SerialUSB.write(VCO2_out >>  24 & 0xFF);
         //SerialUSB.write(VCO2_out >>  16 & 0xFF);
-        SerialUSB.write((VCO2_out / 65535) >>  8 & 0xFF);
-        SerialUSB.write((VCO2_out / 65535) >>  0 & 0xFF);
+        SerialUSB.write((VCO2_out / 65536) >>  8 & 0xFF);
+        SerialUSB.write((VCO2_out / 65536) >>  0 & 0xFF);
         break;
 
         case 0xF6:
@@ -407,8 +407,8 @@ inline void main_loop() { // as fast as possible
         SerialUSB.write((byte)shotgun[i]);
         //SerialUSB.write(VCF_out >>  24 & 0xFF);
         //SerialUSB.write(VCF_out >>  16 & 0xFF);
-        SerialUSB.write((VCF_out / 65535) >>  8 & 0xFF);
-        SerialUSB.write((VCF_out / 65535) >>  0 & 0xFF);
+        SerialUSB.write((VCF_out / 65536) >>  8 & 0xFF);
+        SerialUSB.write((VCF_out / 65536) >>  0 & 0xFF);
         break;
 
         case 0xF7:
@@ -416,8 +416,8 @@ inline void main_loop() { // as fast as possible
         SerialUSB.write((byte)shotgun[i]);
         //SerialUSB.write(MIX_out >>  24 & 0xFF);
         //SerialUSB.write(MIX_out >>  16 & 0xFF);
-        SerialUSB.write((MIX_out / 65535) >>  8 & 0xFF);
-        SerialUSB.write((MIX_out / 65535) >>  0 & 0xFF);
+        SerialUSB.write((MIX_out / 65536) >>  8 & 0xFF);
+        SerialUSB.write((MIX_out / 65536) >>  0 & 0xFF);
         break;
 
         case 0xF8:
@@ -425,8 +425,8 @@ inline void main_loop() { // as fast as possible
         SerialUSB.write((byte)shotgun[i]);
         //SerialUSB.write(VCA_out >>  24 & 0xFF);
         //SerialUSB.write(VCA_out >>  16 & 0xFF);
-        SerialUSB.write((VCA_out / 65535) >>  8 & 0xFF);
-        SerialUSB.write((VCA_out / 65535) >>  0 & 0xFF);
+        SerialUSB.write((VCA_out / 65536) >>  8 & 0xFF);
+        SerialUSB.write((VCA_out / 65536) >>  0 & 0xFF);
         break;
 
         }
