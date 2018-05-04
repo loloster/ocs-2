@@ -177,20 +177,53 @@ try:
 	#print "".join(NozMsg[2:4])
 	#print twoDigitHex(ord(NozMsg[1]))
 	#if NozMsg[1] < 160:
-	if ord(NozMsg[1]) < 160:
-		#print "NozMsg < 160"
-		#print NozMsg[1]
-	        #print twoDigitHex(ord(NozMsg[0])), twoDigitHex(ord(NozMsg[1])), struct.unpack(">H","".join(NozMsg[2:4]))[0]
-		(val,) = struct.unpack_from('>H', NozMsg, 2)
-		print NozMsg[0:2].encode('hex'), val
-	else:  
-		#print "NozMsg > 160"
-		#print NozMsg[1]
-        	#print twoDigitHex(ord(NozMsg[0])), twoDigitHex(ord(NozMsg[1])), struct.unpack(">h","".join(NozMsg[2:4]))[0]
-		(val,) = struct.unpack_from('>h', NozMsg, 2)
-		print NozMsg[0:2].encode('hex'), val
+
+#	if ord(NozMsg[1]) < 160:
+#		#print "NozMsg < 160"
+#		#print NozMsg[1]
+#	        #print twoDigitHex(ord(NozMsg[0])), twoDigitHex(ord(NozMsg[1])), struct.unpack(">H","".join(NozMsg[2:4]))[0]
+#		(val,) = struct.unpack_from('>H', NozMsg, 2)
+#		print NozMsg[0:2].encode('hex'), val
+#	else:
+#		#print "NozMsg > 160"
+#		#print NozMsg[1]
+#        	#print twoDigitHex(ord(NozMsg[0])), twoDigitHex(ord(NozMsg[1])), struct.unpack(">h","".join(NozMsg[2:4]))[0]
+#		(val,) = struct.unpack_from('>h', NozMsg, 2)
+#		print NozMsg[0:2].encode('hex'), val
+
+        if ord(NozMsg[1]) < 160:
+            (val,) = struct.unpack_from('>H', NozMsg, 2)
+            #print '/nozoid//knob'.join((str(ord(NozMsg[1]))," ",NozMsg[0:2].encode('hex'),":",str(val)))
+            print ''.join((str(ord(NozMsg[1]))," ",NozMsg[0:2].encode('hex'),":",str(val)))
+            #sendosc("/nozoid/knob",''.join((str(ord(NozMsg[1])),NozMsg[0:2].encode('hex'),":",str(val))))
+            #sendosc("/nozoid/knob",''.join((str(ord(NozMsg[1])),str(val))))
+
+        if ord(NozMsg[1]) >= 0xA0 and ord(NozMsg[1]) < 0xF0:
+            (val,) = struct.unpack_from('>h', NozMsg, 2)
+            #print type(NozMsg[0:2].encode('hex'))
+            #print type(ord(val))
+            #print '/nozoid/oscitruc'.join((str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex'),":",str(val)))
+            print ''.join((str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex'),":",str(val)))
+            #sendosc("/nozoid/osc",''.join((str(ord(NozMsg[1])-0x9F),str(val))))
+
+        if ord(NozMsg[1]) == 0xF0:
+                print ''.join((NozMsg[2],NozMsg[3]))
+                #sendosc("/nozoid/name",''.join((NozMsg[2],NozMsg[3])))
+
+        if ord(NozMsg[1]) >= 0xF3 and ord(NozMsg[1]) <= 0xF5:
+	    #NozMsg=NozMsg.join((Mser.read(2)))
+	    #NozMsg=NozMsg+Mser.read(2)
+            (val,) = struct.unpack_from('>H', NozMsg, 2)
+            print ''.join((str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex')," ",NozMsg[2:4].encode('hex'),":",str(val)))
+
+        if ord(NozMsg[1]) >= 0xF6 and ord(NozMsg[1]) <= 0xF8:
+	    #NozMsg=NozMsg.join((Mser.read(2)))
+	    #NozMsg=NozMsg+Mser.read(2)
+            (val,) = struct.unpack_from('>h', NozMsg, 2)
+            print ''.join((str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex')," ",NozMsg[2:4].encode('hex'),":",str(val)))
 
 	#print NozMsg[2:4]
+
 
 	#print struct.unpack("<B",Mser.read(1))[0],struct.unpack("<B",Mser.read(1))[0],struct.unpack("<l",Mser.read(4))[0]
 	

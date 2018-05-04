@@ -122,6 +122,10 @@ uint32_t flash_lock_bit;
   
   // keep track of still how much non continuous message has to be sent
   uint8_t shotguncounter=2;
+
+  uint32_t VCO1_out, VCO2_out;
+  int32_t MIX_out, VCF_out, VCA_out;
+
 #endif
 
 void setup() {
@@ -379,6 +383,52 @@ inline void main_loop() { // as fast as possible
         shotguncounter=0;
         }
         break;
+
+        case 0xF3:
+        SerialUSB.write(0xFF);
+        SerialUSB.write((byte)shotgun[i]);
+        //SerialUSB.write(VCO1_out >>  24 & 0xFF);
+        //SerialUSB.write(VCO1_out >>  16 & 0xFF);
+        SerialUSB.write(VCO1_out / 0xFFFF >>  8 & 0xFF);
+        SerialUSB.write(VCO1_out / 0xFFFF >>  0 & 0xFF);
+        break;
+
+        case 0xF4:
+        SerialUSB.write(0xFF);
+        SerialUSB.write((byte)shotgun[i]);
+        //SerialUSB.write(VCO2_out >>  24 & 0xFF);
+        //SerialUSB.write(VCO2_out >>  16 & 0xFF);
+        SerialUSB.write((VCO2_out / 65535) >>  8 & 0xFF);
+        SerialUSB.write((VCO2_out / 65535) >>  0 & 0xFF);
+        break;
+
+        case 0xF6:
+        SerialUSB.write(0xFF);
+        SerialUSB.write((byte)shotgun[i]);
+        //SerialUSB.write(VCF_out >>  24 & 0xFF);
+        //SerialUSB.write(VCF_out >>  16 & 0xFF);
+        SerialUSB.write((VCF_out / 65535) >>  8 & 0xFF);
+        SerialUSB.write((VCF_out / 65535) >>  0 & 0xFF);
+        break;
+
+        case 0xF7:
+        SerialUSB.write(0xFF);
+        SerialUSB.write((byte)shotgun[i]);
+        //SerialUSB.write(MIX_out >>  24 & 0xFF);
+        //SerialUSB.write(MIX_out >>  16 & 0xFF);
+        SerialUSB.write((MIX_out / 65535) >>  8 & 0xFF);
+        SerialUSB.write((MIX_out / 65535) >>  0 & 0xFF);
+        break;
+
+        case 0xF8:
+        SerialUSB.write(0xFF);
+        SerialUSB.write((byte)shotgun[i]);
+        //SerialUSB.write(VCA_out >>  24 & 0xFF);
+        //SerialUSB.write(VCA_out >>  16 & 0xFF);
+        SerialUSB.write((VCA_out / 65535) >>  8 & 0xFF);
+        SerialUSB.write((VCA_out / 65535) >>  0 & 0xFF);
+        break;
+
         }
       }
     }
@@ -392,8 +442,11 @@ void loop() {
 }
 
 inline void compute_audio_sample() {
+
+#ifndef serialout
   uint32_t VCO1_out, VCO2_out;
   int32_t MIX_out, VCF_out, VCA_out;
+#endif
   
   PORTAMENTO();                               // 0.1 µs
   VCO1_out = VCO1();                          // 2.9 µs

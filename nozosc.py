@@ -29,18 +29,20 @@ from sys import platform
 #oscIPin = "192.168.42.194"
 #oscIPin = "127.0.0.1"
 oscIPin = socket.gethostbyname(socket.gethostname())
-oscPORTin = 8001
+oscPORTin = 8003
 oscpathin = ""
 
 #oscIPout = ""
-oscIPout = "10.255.255.194"
-#oscIPout = socket.gethostbyname(socket.gethostname())
+#oscIPout = "10.255.255.194"
+oscIPout = socket.gethostbyname(socket.gethostname())
+#bhorosc.py
 oscPORTout = 8001
 #oscPORTout = 8002
 
 oscdevice = 0
 
 NozMsg=[0,0,0,0]
+NozMsgL=[0,0,0,0,0,0]
 
 print("")
 print("OSCServer")
@@ -56,6 +58,8 @@ def handle_timeout(self):
     self.timed_out = True
 
 
+def twoDigit( number ):
+   return '%02d' % number
 
 def twoDigitHex( number ):
    return '%02x' % number
@@ -106,14 +110,40 @@ def sendosc(oscaddress,oscargs):
 
     if oscpath[2] == "knob":
 	print "we are asked to send a knob value"
-	oscmsg.setAddress(''.join((oscaddress,"/",oscargs[0])))
-	oscmsg.append(int(oscargs[1:100]))
+	oscmsg.setAddress(''.join((oscaddress,"/",str(int(oscargs[0:2])))))
+	oscmsg.append(int(oscargs[2:100]))
 	
     if oscpath[2] == "osc":
 	#print "we are asked to send continusouly an osc value"
-	oscmsg.setAddress(''.join((oscaddress,"/",oscargs[0])))
-	oscmsg.append(int(oscargs[1:100]))
-	
+	#print oscargs
+	oscmsg.setAddress(''.join((oscaddress,"/",str(int(oscargs[0:2])))))
+	oscmsg.append(int(oscargs[2:100]))
+
+    if oscpath[2] == "lfo":
+	#print "we are asked to send continusouly a lfo value"
+	oscmsg.setAddress(''.join((oscaddress,"/",str(int(oscargs[0:2])))))
+	oscmsg.append(int(oscargs[2:100]))
+
+    if oscpath[2] == "vco":
+	#print "we are asked to send continusouly a vco value"
+	oscmsg.setAddress(''.join((oscaddress,"/",str(int(oscargs[0:2])))))
+	oscmsg.append(int(oscargs[2:100]))
+
+    if oscpath[2] == "mix":
+	#print "we are asked to send continusouly a mix value"
+	oscmsg.setAddress(''.join((oscaddress,"/",str(int(oscargs[0:2])))))
+	oscmsg.append(int(oscargs[2:100]))
+
+    if oscpath[2] == "X":
+	print "we are asked to send continusouly a X value"
+	oscmsg.setAddress(oscaddress)
+	oscmsg.append(oscargs)
+
+    if oscpath[2] == "Y":
+	print "we are asked to send continusouly a Y value"
+	oscmsg.setAddress(oscaddress)
+	oscmsg.append(oscargs)
+
     #print "here we are sendosc function"
     #print "path:",oscaddress,"pathlength:", pathlength,"oscpath:", oscpath,"args:", oscargs
 
@@ -124,7 +154,7 @@ def sendosc(oscaddress,oscargs):
 
     #oscmsg.append(oscargs)
     
-    print "sending : ",oscmsg
+    #print "sending : ",oscmsg
     try:
         osclient.sendto(oscmsg, (oscIPout, oscPORTout))
         oscmsg.clearData()
@@ -145,7 +175,7 @@ def sendme(oscaddress,oscargs):
     oscmsg.setAddress(oscaddress)
     oscmsg.append(oscargs)
     
-    print "sending me: ",oscmsg, oscargs
+    #print "sending me: ",oscmsg, oscargs
     try:
         osclientme.sendto(oscmsg, (oscIPin, oscPORTin))
         oscmsg.clearData()
@@ -238,8 +268,8 @@ def nozname(path, tags, args, source):
     
 # /lfo
 def nozlfo(path, tags, args, source):
-	print "LFO"
-	print "P:",path,",T:",tags,",A:",args,",S:",source
+	#print "LFO"
+	#print "P:",path,",T:",tags,",A:",args,",S:",source
 	print ("LFO ", args[0], "asked")
 	Mser.write([0xA2 + int(args[0])]) # 0xA3 : LFO 1 / 0xA4 : LFO 2  / 0xA5 : LFO 3 
 
@@ -247,8 +277,20 @@ def nozlfo(path, tags, args, source):
 # /osc
 def nozosc(path, tags, args, source):
 	#print "OSC"
-	#print ("OSC ", args[0], "asked")
+	print ("OSC ", args[0], "asked")
 	Mser.write([0x9F + int(args[0])]) # 0xA0 : OSC 1 / 0xA1 : OSC 2  / 0xA2 : OSC 3 
+
+# /vco
+def nozvco(path, tags, args, source):
+	#print "OSC"
+	print ("VCO ", args[0], "asked")
+	Mser.write([0xF2 + int(args[0])]) # 0xA0 : OSC 1 / 0xA1 : OSC 2  / 0xA2 : OSC 3
+
+# /mix
+def nozmix(path, tags, args, source):
+	#print "OSC"
+	print ("MIX ", args[0], "asked")
+	Mser.write([0xF5 + int(args[0])]) # 0xA0 : OSC 1 / 0xA1 : OSC 2  / 0xA2 : OSC 3
 
 # /down
 def nozdown(path, tags, args, source):
@@ -273,6 +315,31 @@ def nozknob(path, tags, args, source):
 	print ("KNOB", args[0], "asked")
 	Mser.write([0 + int(args[0])]) # 0xA0 : OSC 1 / 0xA1 : OSC 2  / 0xA2 : OSC 3 
 
+# /X
+def nozX(path, tags, args, source):
+	print args[0]
+	print type(args[0])
+	if args[0] <= 16:
+		Mser.write([0x9F + int(args[0])])
+		print("/nozoid/X/%d") % (0x00 + int(args[0]))
+		sendosc("/nozoid/X",(0x00 + int(args[0])))
+	else:
+		Mser.write([0xE2 + int(args[0])])
+		print("/nozoid/X/%d") % (0x43 + int(args[0]))
+		sendosc("/nozoid/X",(0x43 + int(args[0])))
+
+# /Y
+def nozY(path, tags, args, source):
+	print args[0]
+	print type(args[0])
+	if args[0] <= 16:
+		Mser.write([0x9F + int(args[0])])
+		print("/nozoid/Y/%d") % (0x00 + int(args[0]))
+		sendosc("/nozoid/Y",(0x00 + int(args[0])))
+	else:
+		Mser.write([0xE2 + int(args[0])])
+	        print("/nozoid/Y/%d") % (0x43 + int(args[0]))
+		sendosc("/nozoid/Y",(0x43 + int(args[0])))
 
 # Send text to status display widget
 def nozstatus(path, tags, args, source):
@@ -286,10 +353,14 @@ oscserver.addMsgHandler( "default", nozhandler )
 oscserver.addMsgHandler( "/nozoid/name", nozname )
 oscserver.addMsgHandler( "/nozoid/lfo", nozlfo )
 oscserver.addMsgHandler( "/nozoid/osc", nozosc )
+oscserver.addMsgHandler( "/nozoid/vco", nozvco )
+oscserver.addMsgHandler( "/nozoid/mix", nozmix )
 oscserver.addMsgHandler( "/nozoid/up", nozup )
 oscserver.addMsgHandler( "/nozoid/down", nozdown )
 oscserver.addMsgHandler( "/nozoid/knob", nozknob )
 oscserver.addMsgHandler( "/nozoid/status", nozstatus )
+oscserver.addMsgHandler( "/nozoid/X", nozX )
+oscserver.addMsgHandler( "/nozoid/Y", nozY )
 
 
 #
@@ -352,18 +423,41 @@ try:
             (val,) = struct.unpack_from('>H', NozMsg, 2)
             #print '/nozoid//knob'.join((str(ord(NozMsg[1]))," ",NozMsg[0:2].encode('hex'),":",str(val)))
             #sendosc("/nozoid/knob",''.join((str(ord(NozMsg[1])),NozMsg[0:2].encode('hex'),":",str(val))))
-            sendosc("/nozoid/knob",''.join((str(ord(NozMsg[1])),str(val))))
+            sendosc("/nozoid/knob",''.join((twoDigit(ord(NozMsg[1])),str(val))))
         
          if ord(NozMsg[1]) >= 0xA0 and ord(NozMsg[1]) < 0xF0:
             (val,) = struct.unpack_from('>h', NozMsg, 2)
+	    #print NozMsg
             #print type(NozMsg[0:2].encode('hex'))
             #print type(ord(val))
             #print '/nozoid/oscitruc'.join((str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex'),":",str(val)))
-            sendosc("/nozoid/osc",''.join((str(ord(NozMsg[1])-0x9F),str(val))))
+            sendosc("/nozoid/osc",''.join((twoDigit(ord(NozMsg[1])-0x9F),str(val))))
 
          if ord(NozMsg[1]) == 0xF0:   
-		print ''.join((NozMsg[2],NozMsg[3]))
-		sendosc("/nozoid/name",''.join((NozMsg[2],NozMsg[3])))
+	    print ''.join((NozMsg[2],NozMsg[3]))
+	    sendosc("/nozoid/name",''.join((NozMsg[2],NozMsg[3])))
+
+         if ord(NozMsg[1]) >= 0xF3 and ord(NozMsg[1]) <= 0xF5:
+	    #NozMsgL=NozMsg+Mser.read(2)
+            (val,) = struct.unpack_from('>H', NozMsg, 2)
+            #(val,) = struct.unpack_from('>L', NozMsgL, 2)
+            #print ''.join((str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex')," ",NozMsg[2:4].encode('hex'),":",str(val)))
+            #print ''.join((str(ord(NozMsg[1])-0xF2)," ",NozMsg[0:2].encode('hex')," ",NozMsg[2:4].encode('hex'),":",str(val)))
+            #print ''.join((str(ord(NozMsg[1])-0xF2)," ",NozMsg[0:2].encode('hex')," ",NozMsgL[2:6].encode('hex'),":",str(val)))
+            #sendosc("/nozoid/osc",''.join((twoDigit(ord(NozMsg[1])-0x9F),str(val))))
+            sendosc("/nozoid/osc",''.join((twoDigit(ord(NozMsg[1])-0x9F),str(val-32767))))
+            #sendosc("/nozoid/vco",''.join((twoDigit(ord(NozMsg[1])-0xF2),str(val-32767))))
+
+         if ord(NozMsg[1]) >= 0xF6 and ord(NozMsg[1]) <= 0xF8:
+	    #NozMsgL=NozMsg+Mser.read(2)
+            (val,) = struct.unpack_from('>h', NozMsg, 2)
+            #(val,) = struct.unpack_from('>l', NozMsgL, 2)
+            #print ''.join((str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex')," ",NozMsg[2:4].encode('hex'),":",str(val)))
+            #print ''.join((str(ord(NozMsg[1])-0xF5)," ",NozMsg[0:2].encode('hex')," ",NozMsg[2:4].encode('hex'),":",str(val)))
+            #print ''.join((str(ord(NozMsg[1])-0xF5)," ",NozMsg[0:2].encode('hex')," ",NozMsgL[2:6].encode('hex'),":",str(val)))
+            sendosc("/nozoid/osc",''.join((twoDigit(ord(NozMsg[1])-0x9F),str(val))))
+            #sendosc("/nozoid/mix",''.join((twoDigit(ord(NozMsg[1])-0xF5),str(val))))
+
 
 
 except StopIteration:
