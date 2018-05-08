@@ -35,7 +35,43 @@ tLfoDelta = [0] * 256
 lfoval0=0
 lfoval1=0
 
+def scaleTo127(value):#scale down a short [0,65535] to 127
+	return ((value/256)/2)
+
 #DMX
+def nozdmx(xy,osc,value):
+	#print "hey! i'm nozdmx!"
+	#print xy
+	#print osc
+	#print value
+	dmxv=scaleTo127(value+32767)
+	if xy == "X":
+		senddmx(7,dmxv)#pan
+		senddmx(8,dmxv)#change tilt to 180° (see http://static.boomtonedj.com/pdf/manual/43/43105_manuelfroggyledrgbw.pdf)
+		#senddmx(9,255)#rotation speed
+	if xy == "Y":
+		senddmx(21,dmxv)#pan
+		senddmx(23,dmxv)#tilt
+		#senddmx(25,255)#rotation speed
+
+def joydmx(knob,value):
+	#print knob
+	#print type(knob)
+	#print value
+	#print type(value)
+	#vrand=random.randint(0,255)
+	dmxv=scaleTo127(value)
+	print dmxv
+	if knob == 30:
+		senddmx(7,dmxv)#pan
+		senddmx(8,dmxv)#change tilt to 180° (see http://static.boomtonedj.com/pdf/manual/43/43105_manuelfroggyledrgbw.pdf)
+		#senddmx(9,dmxv)#rotation speed
+	if knob == 31:
+		senddmx(21,dmxv)#pan
+		senddmx(23,dmxv)#tilt
+		#senddmx(25,dmxv)#rotation speed
+
+
 def senddmx0():
     for channel in range (1,512):
 	senddmx(channel,0)
@@ -55,6 +91,7 @@ def senddmx(channel, value):
 
 #oscIPin = "192.168.42.194"
 #oscIPin = "127.0.0.1"
+#oscIPin = "192.168.1.246"
 oscIPin = socket.gethostbyname(socket.gethostname())
 oscPORTin = 8003
 oscpathin = ""
@@ -139,12 +176,20 @@ def sendosc(oscaddress,oscargs):
 	print "we are asked to send a knob value"
 	oscmsg.setAddress(''.join((oscaddress,"/",str(int(oscargs[0:2])))))
 	oscmsg.append(int(oscargs[2:100]))
+	if mydmx:
+		joydmx(int(oscargs[0:2]),int(oscargs[2:100]))
+	#else:
+	#	print oscmsg
 	
     if oscpath[2] == "osc":
 	#print "we are asked to send continusouly an osc value"
 	#print oscargs
 	oscmsg.setAddress(''.join((oscaddress,"/",str(int(oscargs[0:2])))))
 	oscmsg.append(int(oscargs[2:100]))
+	#if mydmx:
+	#	nozdmx(gstt.OsciLazCoord[int(oscargs[0:2])],
+	#		int(oscargs[0:2]),
+	#		int(oscargs[2:100]))
 
     if oscpath[2] == "lfo":
 	#print "we are asked to send continusouly a lfo value"
@@ -165,11 +210,26 @@ def sendosc(oscaddress,oscargs):
 	print "we are asked to send continusouly a X value"
 	oscmsg.setAddress(oscaddress)
 	oscmsg.append(oscargs)
+	#print oscargs
+	gstt.OsciLazCoord[oscargs]="X"
+	#print gstt.OsciLazCoord[oscargs]
+	#if mydmx:
+	#	print oscaddress
+	#	print oscargs
+	#	#print oscargs[2:100]
+	#	#nozdmx(1,int(oscargs[0:2]),int(oscargs[2:100]))
 
     if oscpath[2] == "Y":
 	print "we are asked to send continusouly a Y value"
 	oscmsg.setAddress(oscaddress)
 	oscmsg.append(oscargs)
+	gstt.OsciLazCoord[oscargs]="Y"
+	#if mydmx:
+	#	print oscaddress
+	#	print oscargs
+	#	#print oscargs[2:100]
+	#	#nozdmx(2,int(oscargs[0:2]),int(oscargs[2:100]))
+
 
     if oscpath[2] == "color":
 	print "we are asked to change lazer color"
@@ -280,6 +340,12 @@ def nozon(path, tags, args, source):
 def nozstop(path, tags, args, source):
 
     print ("Stop Com from Nozoid")
+
+    sendosc("/nozoid/X", 0)
+    gstt.X=0
+    sendosc("/nozoid/Y", 0)
+    gstt.Y=0
+
     Mser.write([0xFF]) 
 #    time.sleep(1)
     print "In_Waiting garbage msg # after 0xFF sent:",Mser.in_waiting
@@ -334,7 +400,7 @@ def nozmix(path, tags, args, source):
 
 # /down
 def nozdown(path, tags, args, source):
-	#print ("UP ", args[0], "asked")
+	print ("UP ", args[0], "asked")
 	#print "Path:",path,",Tags:",tags,",Args:",args,",Source:",source
 	if args:
 		Mser.write([0xF1,int(args[0])]) # 0xF1 slowing down flow with argument
@@ -343,7 +409,7 @@ def nozdown(path, tags, args, source):
 
 # /up
 def nozup(path, tags, args, source):
-	#print ("UP ", args[0], "asked")
+	print ("UP ", args[0], "asked")
 	#print "Path:",path,",Tags:",tags,",Args:",args,",Source:",source
 	if args:
 		Mser.write([0xF2,int(args[0])]) # 0xF2 speeding up with argument
@@ -357,7 +423,7 @@ def nozknob(path, tags, args, source):
 
 # /X
 def nozX(path, tags, args, source):
-	print args
+	#print args
 	if 0 == len(args):
 		print "Current active X trace set to %d" % gstt.X
 	else:
@@ -371,18 +437,20 @@ def nozX(path, tags, args, source):
 
 		if args[0] <= 16:
 			Mser.write([0x9F + int(args[0])])
-			print("/nozoid/X/%d") % (0x00 + int(args[0]))
+			#print("/nozoid/X/%d") % (0x00 + int(args[0]))
 			sendosc("/nozoid/X",(0x00 + int(args[0])))
 		else:
 			Mser.write([0xE2 + int(args[0])])
-			print("/nozoid/X/%d") % (0x43 + int(args[0]))
-			sendosc("/nozoid/X",(0x43 + int(args[0])))
+			#print("/nozoid/X/%d") % (0x43 + int(args[0]))
+			#sendosc("/nozoid/X",(0x43 + int(args[0])))
+			#print("/nozoid/X/%d") % (0x00 + int(args[0]))
+			sendosc("/nozoid/X",(0x00 + int(args[0])))
 
 		gstt.X=int(args[0])
 
 # /Y
 def nozY(path, tags, args, source):
-	print args
+	#print args
 	if 0 == len(args):
 		print "Current active Y trace set to %d" % gstt.Y
 	else:
@@ -396,12 +464,14 @@ def nozY(path, tags, args, source):
 
 		if args[0] <= 16:
 			Mser.write([0x9F + int(args[0])])
-			print("/nozoid/Y/%d") % (0x00 + int(args[0]))
+			#print("/nozoid/Y/%d") % (0x00 + int(args[0]))
 			sendosc("/nozoid/Y",(0x00 + int(args[0])))
 		else:
 			Mser.write([0xE2 + int(args[0])])
-	        	print("/nozoid/Y/%d") % (0x43 + int(args[0]))
-			sendosc("/nozoid/Y",(0x43 + int(args[0])))
+			#print("/nozoid/Y/%d") % (0x43 + int(args[0]))
+			#sendosc("/nozoid/Y",(0x43 + int(args[0])))
+			#print("/nozoid/Y/%d") % (0x00 + int(args[0]))
+			sendosc("/nozoid/Y",(0x00 + int(args[0])))
 
 		gstt.Y=int(args[0])
 
@@ -476,7 +546,7 @@ ports = list(list_ports.comports())
 for p in ports:
     print(p)
 
-raw_input("Will try to select Last Serial Port\nPress Enter to continue...")
+#raw_input("Will try to select Last Serial Port\nPress Enter to continue...")
 
 try:
 
@@ -489,6 +559,7 @@ try:
 
     print "Serial Picked for Nozoid :",sernozoid[0]
     Mser = serial.Serial(sernozoid[0],115200)
+    #Mser = serial.Serial(sernozoid[0],230400)
     #Mser = serial.Serial(gstt.sernozoid[0],115200,timeout=5)
     print "Serial connection..."
     print "Device..." 
@@ -531,7 +602,7 @@ if Mser != False:
 	#print "gstt.serdmx", gstt.serdmx
 	#raw_input("Press Enter to continue...")
 
-	continueprint ("Serial Picked for DMX : ",gstt.serdmx[0])
+	print ("Serial Picked for DMX : ",gstt.serdmx[0])
 
 	if gstt.serdmx != "":
 		mydmx = pysimpledmx.DMXConnection(gstt.serdmx[0])
@@ -554,34 +625,36 @@ if Mser != False:
 	vrand=random.randint(0,255)
 	senddmx(8,vrand)#change tilt to 180° (see http://static.boomtonedj.com/pdf/manual/43/43105_manuelfroggyledrgbw.pdf)
 	vrand=random.randint(0,255)
-	senddmx(9,vrand)#rotation speed
+	#senddmx(9,vrand)#rotation speed
+	senddmx(9,0)#rotation speed
 
 	vrand=random.randint(0,255)
-	senddmx(21,vrand)
+	senddmx(21,vrand)#pan (see https://www.mhdiffusion.fr/download/notices/xs_15_spot_fra.pdf)
 	vrand=random.randint(0,255)
-	senddmx(22,0)
+	senddmx(22,0)#pan fine (?)
 	vrand=random.randint(0,255)
-	senddmx(23,vrand)
+	senddmx(23,vrand)#tilt
 	vrand=random.randint(0,255)
-	senddmx(24,0)
+	senddmx(24,0)#tilt fine (?)
 	vrand=random.randint(0,255)
-	senddmx(25,0)
+	senddmx(25,0)#velocity pan/tilt
+	#senddmx(25,255)#velocity pan/tilt
 	vrand=random.randint(0,255)
-	senddmx(26,255)
+	senddmx(26,255)#dimmer / strob
 	vrand=random.randint(0,255)
-	senddmx(27,255)
+	senddmx(27,255)#red
 	vrand=random.randint(0,255)
-	senddmx(28,255)
+	senddmx(28,255)#green
 	vrand=random.randint(0,255)
-	senddmx(29,255)
+	senddmx(29,255)#blue
 	vrand=random.randint(0,255)
-#    senddmx(30,vrand)
+#    senddmx(30,vrand)#color macro
 	vrand=random.randint(0,255)
-#    senddmx(31,vrand)
+#    senddmx(31,vrand)#velocity macro
 	vrand=random.randint(0,255)
-#    senddmx(32,0)
+#    senddmx(32,0)#movement macro
 	vrand=random.randint(0,255)
-#    senddmx(33,vrand)
+#    senddmx(33,vrand)#globo
 
 	vrand=random.randint(0,255)
 	senddmx(41,vrand)
@@ -607,6 +680,13 @@ if Mser != False:
 	pass
 #end DMX exception initialization
 #mydmx is *set* to false so can be checked for the following…
+
+    if mydmx:
+	#raw_input("DMX On!")
+	print "DMX On!"
+    else:
+	#raw_input("DMX Off!")
+	print "DMX Off!"
 
     while True:
 
@@ -636,7 +716,7 @@ if Mser != False:
 
 	    tLfoVal1[OrdNozMsg]=val
 	    tLfoDelta[OrdNozMsg]=abs(tLfoVal1[OrdNozMsg]-tLfoVal0[OrdNozMsg])
-
+	    #à envoyer comme msg 0xAD(14) et 0xAE(15)
 	    #print "delta lfo %x : %d" % (OrdNozMsg, tLfoDelta[OrdNozMsg])
 
             sendosc("/nozoid/osc",''.join((twoDigit(ord(NozMsg[1])-0x9F),str(val))))
@@ -653,8 +733,9 @@ if Mser != False:
             #print ''.join((str(ord(NozMsg[1])-0xF2)," ",NozMsg[0:2].encode('hex')," ",NozMsg[2:4].encode('hex'),":",str(val)))
             #print ''.join((str(ord(NozMsg[1])-0xF2)," ",NozMsg[0:2].encode('hex')," ",NozMsgL[2:6].encode('hex'),":",str(val)))
             #sendosc("/nozoid/osc",''.join((twoDigit(ord(NozMsg[1])-0x9F),str(val))))
-            sendosc("/nozoid/osc",''.join((twoDigit(ord(NozMsg[1])-0x9F),str(val-32767))))
+            #sendosc("/nozoid/osc",''.join((twoDigit(ord(NozMsg[1])-0x9F),str(val-32767))))
             #sendosc("/nozoid/vco",''.join((twoDigit(ord(NozMsg[1])-0xF2),str(val-32767))))
+            sendosc("/nozoid/osc",''.join((twoDigit(ord(NozMsg[1])-0xE2),str(val-32767))))
 
          if ord(NozMsg[1]) >= 0xF6 and ord(NozMsg[1]) <= 0xF8:
 	    #NozMsgL=NozMsg+Mser.read(2)
@@ -663,8 +744,9 @@ if Mser != False:
             #print ''.join((str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex')," ",NozMsg[2:4].encode('hex'),":",str(val)))
             #print ''.join((str(ord(NozMsg[1])-0xF5)," ",NozMsg[0:2].encode('hex')," ",NozMsg[2:4].encode('hex'),":",str(val)))
             #print ''.join((str(ord(NozMsg[1])-0xF5)," ",NozMsg[0:2].encode('hex')," ",NozMsgL[2:6].encode('hex'),":",str(val)))
-            sendosc("/nozoid/osc",''.join((twoDigit(ord(NozMsg[1])-0x9F),str(val))))
+            #sendosc("/nozoid/osc",''.join((twoDigit(ord(NozMsg[1])-0x9F),str(val))))
             #sendosc("/nozoid/mix",''.join((twoDigit(ord(NozMsg[1])-0xF5),str(val))))
+            sendosc("/nozoid/osc",''.join((twoDigit(ord(NozMsg[1])-0xE2),str(val))))
 
 
 '''
