@@ -718,6 +718,14 @@ inline void keyboard_in() {
       }
       NOTE_ON = KEY_LOCAL_tmp;
       modulation_data[mod_VEL] = velocity;
+      #ifdef serialout
+        if (NOTE_ON) {
+        Serial.print("Note:");
+        Serial.println(NOTE_ON-16);
+        Serial.print("Velocity:");
+        Serial.println(modulation_data[mod_VEL]);
+        }
+      #endif
     }
     break;
   }
