@@ -238,7 +238,7 @@ inline void main_loop() { // as fast as possible
       Serial.print("I received: ");
       Serial.println(incomingByte, DEC);
       /**/
-      if ((incomingByte < 100) || (incomingByte == 0xF0) || (incomingByte == 0xF1) || (incomingByte == 0xF2)){
+      if ((incomingByte < 0xA0) || (incomingByte == 0xF0) || (incomingByte == 0xF1) || (incomingByte == 0xF2)){
         loopc=slowloop;
         shotguncounter=2;
         shotgun[0]=incomingByte;
@@ -249,12 +249,17 @@ inline void main_loop() { // as fast as possible
           shotgun[2]=0xFF;
           shotgun[3]=0xFF;
           slowloop=0;
+          Serial.print("Maximum shotgun speed set:");
+          Serial.println(slowloop);
         }
         else { // continuous dump
          if (incomingByte ==  shotgun[1]) {
           shotgun[1]=shotgun[2];
           shotgun[2]=shotgun[3];
           shotgun[3]=0xFF;
+          slowloop = ((shotgun[2] == 0xFF)) ? (slowloop == 1) ? 0 : slowloop : slowloop;
+          Serial.print("Tweaking shotgun speed:");
+          Serial.println(slowloop);
          }
          else {
           if (incomingByte == shotgun [2]) {
@@ -269,7 +274,10 @@ inline void main_loop() { // as fast as possible
             shotgun[3]=shotgun[2];
             shotgun[2]=shotgun[1];
             shotgun[1]=incomingByte;             
-            slowloop = ((slowloop == 1) && (shotgun[2] == 0xFF)) ? 0 : !(slowloop) ? 1 : slowloop;
+//            slowloop = ((slowloop == 1) && (shotgun[2] == 0xFF)) ? 0 : !(slowloop) ? 1 : slowloop;
+            slowloop = ((shotgun[2] != 0xFF)) ? (slowloop > 1) ? slowloop : 1 : (slowloop > 1) ? slowloop : 0;
+            Serial.print("Tweaking shotgun speed:");
+            Serial.println(slowloop);
            }
           }
          }
@@ -280,8 +288,10 @@ inline void main_loop() { // as fast as possible
   if (!(loopc++ < slowloop)){
    loopc=0;
    if (incomingByte != 0xFF) {
-    for (i=0;i<4;i++){
-      switch (shotgun[i]) {
+//    for (i=0;i<4;i++){
+//      switch (shotgun[i]) {
+     if (shotgun[0] != 0xFF) {
+        switch (shotgun[0]) {
         case 0:
         case 1:
         case 2:
@@ -322,8 +332,60 @@ inline void main_loop() { // as fast as possible
           SerialUSB.write(adc_value16[shotgun[i]] >>  8 & 0xFF);
           SerialUSB.write(adc_value16[shotgun[i]] >>  0 & 0xFF);
           shotguncounter--;
+        } else {
+          shotgun[0]=0xFF;
         }
         break;
+
+        case 0xF0:
+        if (0 < shotguncounter) {
+          SerialUSB.write(0xFF);
+          SerialUSB.write(0xF0);
+          SerialUSB.print("O2");
+          shotguncounter--;
+        } else {
+          shotgun[0]=0xFF;
+        }
+        break;
+        
+        case 0xF1:
+        if (0 < shotguncounter) {
+          if (!(SerialUSB.available() > 0))
+            slowloop++;
+            else {
+              incomingByte1 = SerialUSB.read();
+              slowloop += incomingByte1;
+            }
+
+        Serial.print("Slowing down shotgun:");
+        Serial.println(slowloop);
+        shotguncounter=0;
+        } else {
+          shotgun[0]=0xFF;
+        }
+        break;
+        
+        case 0xF2:
+        if (0 < shotguncounter) {
+          if (!(SerialUSB.available() > 0))
+            slowloop = (1 < slowloop) ? --slowloop : (shotgun[2] == 0xFF) ? 0 : 1;
+            else {
+              incomingByte1 = SerialUSB.read();
+              slowloop = (incomingByte1 < slowloop) ? (slowloop-incomingByte1) : (shotgun[2] == 0xFF) ? 0 : 1;
+            }
+        
+        Serial.print("Speeding up shotgun:");
+        Serial.println(slowloop);
+        shotguncounter=0;
+        } else {
+          shotgun[0]=0xFF;
+        }
+        break;
+       }
+     }
+
+      for (i=1;i<4;i++){
+        switch (shotgun[i]) {
 
         case 0xA0://VCO1 1
         case 0xA1://VCO2 2
@@ -342,46 +404,6 @@ inline void main_loop() { // as fast as possible
         SerialUSB.write((byte)shotgun[i]);
         SerialUSB.write(modulation_data[shotgun[i]-0xA0] >>  8 & 0xFF);
         SerialUSB.write(modulation_data[shotgun[i]-0xA0] >>  0 & 0xFF);
-     
-        break;
-        
-        case 0xF0:
-        if (0 < shotguncounter) {
-          SerialUSB.write(0xFF);
-          SerialUSB.write(0xF0);
-          SerialUSB.print("O2");
-          shotguncounter--;
-        }
-        break;
-        
-        case 0xF1:
-        if (0 < shotguncounter) {
-          if (!(SerialUSB.available() > 0))
-            slowloop++;
-            else {
-              incomingByte1 = SerialUSB.read();
-              slowloop += incomingByte1;
-            }
-
-        Serial.print("Slowing down shotgun:");
-        Serial.println(slowloop);
-        shotguncounter=0;
-        }
-        break;
-        
-        case 0xF2:
-        if (0 < shotguncounter) {
-          if (!(SerialUSB.available() > 0))
-            slowloop = (1 < slowloop) ? --slowloop : (shotgun[2] == 0xFF) ? 0 : 1;
-            else {
-              incomingByte1 = SerialUSB.read();
-              slowloop = (incomingByte1 < slowloop) ? (slowloop-incomingByte1) : (shotgun[2] == 0xFF) ? 0 : 1;
-            }
-        
-        Serial.print("Speeding up shotgun:");
-        Serial.println(slowloop);
-        shotguncounter=0;
-        }
         break;
 
         case 0xF3://17
