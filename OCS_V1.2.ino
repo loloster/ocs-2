@@ -325,19 +325,19 @@ inline void main_loop() { // as fast as possible
         }
         break;
 
-        case 0xA0:
-        case 0xA1:
-        case 0xA2:
-        case 0xA3:
-        case 0xA4:
-        case 0xA5:
-        case 0xA6:
-        case 0xA7:
-        case 0xA8:
-        case 0xA9:
-        case 0xAA:
-        case 0xAB:
-        case 0xAC:
+        case 0xA0://VCO1 1
+        case 0xA1://VCO2 2
+        case 0xA2://LFO1 3
+        case 0xA3://LFO2 4
+        case 0xA4://LFO3 5
+        case 0xA5://CVGEN 6
+        case 0xA6://ADSR 7
+        case 0xA7://LIGHT 8
+        case 0xA8://AUDIO IN 9
+        case 0xA9://Midi (Keyboard ?) Velocity 10
+        case 0xAA://CV1 11
+        case 0xAB://CV2 12
+        case 0xAC://CV3 13
         SerialUSB.write(0xFF);
         SerialUSB.write((byte)shotgun[i]);
         SerialUSB.write(modulation_data[shotgun[i]-0xA0] >>  8 & 0xFF);
