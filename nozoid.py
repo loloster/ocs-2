@@ -27,6 +27,9 @@ cc = [0] * 256
 
 NozMsg=[0,0,0,0]
 
+def twoDigit( number ):
+   return '%02d' % number
+
 def twoDigitHex( number ):
    return '%02x' % number
    
@@ -194,7 +197,7 @@ try:
         if ord(NozMsg[1]) < 160:
             (val,) = struct.unpack_from('>H', NozMsg, 2)
             #print '/nozoid//knob'.join((str(ord(NozMsg[1]))," ",NozMsg[0:2].encode('hex'),":",str(val)))
-            print ''.join((str(ord(NozMsg[1]))," ",NozMsg[0:2].encode('hex'),":",str(val)))
+            print ''.join((twoDigit(ord(NozMsg[1]))," ",NozMsg[0:2].encode('hex'),":",str(val)))
             #sendosc("/nozoid/knob",''.join((str(ord(NozMsg[1])),NozMsg[0:2].encode('hex'),":",str(val))))
             #sendosc("/nozoid/knob",''.join((str(ord(NozMsg[1])),str(val))))
 
@@ -203,7 +206,7 @@ try:
             #print type(NozMsg[0:2].encode('hex'))
             #print type(ord(val))
             #print '/nozoid/oscitruc'.join((str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex'),":",str(val)))
-            print ''.join((str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex'),":",str(val)))
+            print ''.join((twoDigit(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex'),":",str(val)))
             #sendosc("/nozoid/osc",''.join((str(ord(NozMsg[1])-0x9F),str(val))))
 
         if ord(NozMsg[1]) == 0xF0:
@@ -214,13 +217,13 @@ try:
 	    #NozMsg=NozMsg.join((Mser.read(2)))
 	    #NozMsg=NozMsg+Mser.read(2)
             (val,) = struct.unpack_from('>H', NozMsg, 2)
-            print ''.join((str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex')," ",NozMsg[2:4].encode('hex'),":",str(val)))
+            print ''.join((twoDigit(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex')," ",NozMsg[2:4].encode('hex'),":",str(val)))
 
         if ord(NozMsg[1]) >= 0xF6 and ord(NozMsg[1]) <= 0xF8:
 	    #NozMsg=NozMsg.join((Mser.read(2)))
 	    #NozMsg=NozMsg+Mser.read(2)
             (val,) = struct.unpack_from('>h', NozMsg, 2)
-            print ''.join((str(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex')," ",NozMsg[2:4].encode('hex'),":",str(val)))
+            print ''.join((twoDigit(ord(NozMsg[1])-0x9F)," ",NozMsg[0:2].encode('hex')," ",NozMsg[2:4].encode('hex'),":",str(val)))
 
 	#print NozMsg[2:4]
 
