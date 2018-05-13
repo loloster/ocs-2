@@ -27,6 +27,7 @@ import struct
 from OSC import OSCServer, OSCClient, OSCMessage
 import types
 from sys import platform
+import argparse
 
 tLfoVal0 =  [0] * 256
 tLfoVal1 =  [0] * 256
@@ -34,6 +35,29 @@ tLfoDelta = [0] * 256
 
 lfoval0=0
 lfoval1=0
+
+argsparser = argparse.ArgumentParser(description="A Scanner Interface Darkly")
+#argsparser.add_argument("interface",help="interface to scan")
+argsparser.add_argument("-i","--iport",help="Port number receiving OSC commands (8003 by default)",type=int)
+argsparser.add_argument("-o","--oport",help="Port number sending OSC commands to LJay (bhorosc.py) (8001 by default)",type=int)
+argsparser.add_argument("-n","--nozport",help="Serial port number connected to Nozoïd USB ((ACM)0 by default)",type=int)
+args = argsparser.parse_args()
+
+if args.iport:
+	iport=args.iport
+else:
+	iport=gstt.iport
+
+if args.oport:
+	oport=args.oport
+else:
+	oport=gstt.oport
+
+if args.nozport:
+	nozport=args.nozport
+	print nozport
+else:
+	nozport=gstt.nozport
 
 def scaleTo127(value):#scale down a short [0,65535] to 127
 	return ((value/256)/2)
@@ -93,15 +117,21 @@ def senddmx(channel, value):
 #oscIPin = "127.0.0.1"
 #oscIPin = "192.168.1.246"
 oscIPin = socket.gethostbyname(socket.gethostname())
-oscPORTin = 8003
+#oscPORTin = 8003
+oscPORTin = iport
 oscpathin = ""
 
 #oscIPout = ""
 #oscIPout = "10.255.255.194"
 oscIPout = socket.gethostbyname(socket.gethostname())
 #bhorosc.py
-oscPORTout = 8001
+#oscPORTout = 8001
+oscPORTout = oport
 #oscPORTout = 8002
+
+#OSCServer sam nrhck
+oscIPout2 = "192.168.1.10"
+oscPORTout2 = 8001
 
 oscdevice = 0
 
@@ -253,15 +283,33 @@ def sendosc(oscaddress,oscargs):
     #print "sending:",oscmsg
 
     #if len(oscmsg) > 0:
+
+#    try:
+	#send to sam nrhck
+#	osclient.sendto(oscmsg, (oscIPout2, oscPORTout2))
+	#print ('Connection accepted @ sam ',oscIPout2)
+#    except:
+#	print ('Connection refused @ sam ',oscIPout2)
+#        pass
+
     try:
 	osclient.sendto(oscmsg, (oscIPout, oscPORTout))
 	oscmsg.clearData()
     except:
 	print ('Connection refused at ',oscIPout)
         pass
+
     #else:
 #	print "Hum here in nozosc.py something went wrong with your %r msg" %oscpath[2]
     #time.sleep(0.001)
+
+#    try:
+	#send to sam nrhck
+#	osclient.sendto(oscmsg, (oscIPout2, oscPORTout2))
+	#print ('Connection accepted @ sam ',oscIPout2)
+#    except:
+	#print ('Connection refused @ sam ',oscIPout2)
+#        pass
 
 
 
@@ -554,7 +602,8 @@ try:
     if  platform == 'darwin':
         sernozoid = next(list_ports.grep("Arduino Due"))
     if  platform == 'linux2':
-        sernozoid = next(list_ports.grep("ACM"))
+        print "ACM"+str(nozport)
+        sernozoid = next(list_ports.grep("ACM"+str(nozport)))
 
 
     print "Serial Picked for Nozoid :",sernozoid[0]
@@ -691,6 +740,7 @@ if Mser != False:
     while True:
 
         #print "loop"
+	#time.sleep(0.001)
         osc_frame()
 
 	if Mser.in_waiting != 0:        
