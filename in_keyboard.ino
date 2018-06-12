@@ -720,10 +720,10 @@ inline void keyboard_in() {
       modulation_data[mod_VEL] = velocity;
       #ifdef serialout
         if (NOTE_ON) {
-        SerialUSB.print("Note:");
-        SerialUSB.println(NOTE_ON-16);
-        SerialUSB.print("Velocity:");
-        SerialUSB.println(modulation_data[mod_VEL]);
+        Serial.print("Note:");
+        Serial.println(NOTE_ON-16);
+        Serial.print("Velocity:");
+        Serial.println(modulation_data[mod_VEL]);
         }
       #endif
     }
