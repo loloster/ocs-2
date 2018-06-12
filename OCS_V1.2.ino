@@ -327,10 +327,12 @@ inline void main_loop() { // as fast as possible
         case 32:
         case 33:
         if (0 < shotguncounter) {
-          SerialUSB.write(0xFF);
-          SerialUSB.write((byte)shotgun[i]);
-          SerialUSB.write(adc_value16[shotgun[i]] >>  8 & 0xFF);
-          SerialUSB.write(adc_value16[shotgun[i]] >>  0 & 0xFF);
+          //if (SerialUSB.availableForWrite()>5) {
+           SerialUSB.write(0xFF);
+           SerialUSB.write((byte)shotgun[i]);
+           SerialUSB.write(adc_value16[shotgun[i]] >>  8 & 0xFF);
+           SerialUSB.write(adc_value16[shotgun[i]] >>  0 & 0xFF);
+          //}
           shotguncounter--;
         } else {
           shotgun[0]=0xFF;
@@ -400,10 +402,12 @@ inline void main_loop() { // as fast as possible
         case 0xAA://CV1 11
         case 0xAB://CV2 12
         case 0xAC://CV3 13
-        SerialUSB.write(0xFF);
-        SerialUSB.write((byte)shotgun[i]);
-        SerialUSB.write(modulation_data[shotgun[i]-0xA0] >>  8 & 0xFF);
-        SerialUSB.write(modulation_data[shotgun[i]-0xA0] >>  0 & 0xFF);
+        //if (SerialUSB.availableForWrite()>5) {
+          SerialUSB.write(0xFF);
+          SerialUSB.write((byte)shotgun[i]);
+          SerialUSB.write(modulation_data[shotgun[i]-0xA0] >>  8 & 0xFF);
+          SerialUSB.write(modulation_data[shotgun[i]-0xA0] >>  0 & 0xFF);
+        //}
         break;
 
         case 0xF3://17
