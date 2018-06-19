@@ -118,8 +118,9 @@ uint32_t flash_lock_bit;
   // shotgun[0] is were we save the type of non continuous message to send:
   // aka. knob value ([0x00,0x64(100)[), slower(0xF1)/speedier(0xF2) loop, identifier(0xF0), reinit(0xFF)
   // shotgun[1,2,3] is were we save the type of continuous message to send (>=0xA0 && <0xF0)
-  //byte shotgun[4];
-  byte shotgun[5];
+  //byte shotgun[4];//szshtgn=4
+  //byte shotgun[5];//szshtgn=5
+  byte shotgun[6];//szshtgn=6
   
   // keep track of still how much non continuous message has to be sent
   uint8_t shotguncounter=2;
@@ -248,8 +249,9 @@ inline void main_loop() { // as fast as possible
           shotgun[0]=0xFF;
           shotgun[1]=0xFF;
           shotgun[2]=0xFF;
-          shotgun[3]=0xFF;
-          shotgun[4]=0xFF;
+          shotgun[3]=0xFF;//szshtgn=4
+          shotgun[4]=0xFF;//szshtgn=5
+          shotgun[5]=0xFF;//szshtgn=6
           slowloop=0;
           Serial.print("Maximum shotgun speed set:");
           Serial.println(slowloop);
@@ -260,9 +262,11 @@ inline void main_loop() { // as fast as possible
           shotgun[2]=shotgun[3];
           
           shotgun[3]=shotgun[4];//szshtgn=5
+          shotgun[4]=shotgun[5];//szshtgn=6
 
 //          shotgun[3]=0xFF;//szshtgn=4
-          shotgun[4]=0xFF;//szshtgn=5
+//          shotgun[4]=0xFF;//szshtgn=5
+          shotgun[5]=0xFF;//szshtgn=6
           
           slowloop = ((shotgun[2] == 0xFF)) ? (slowloop == 1) ? 0 : slowloop : slowloop;
           Serial.print("Tweaking shotgun speed:");
@@ -273,28 +277,37 @@ inline void main_loop() { // as fast as possible
            shotgun[2]=shotgun[3];
            
            shotgun[3]=shotgun[4];//szshtgn=5
+           shotgun[4]=shotgun[5];//szshtgn=6
            
            //shotgun[3]=0xFF;//szshtgn=4
-           
-           shotgun[4]=0xFF;//szshtgn=5
+           //shotgun[4]=0xFF;//szshtgn=5
+           shotgun[5]=0xFF;//szshtgn=6
           }
           else {
            if (incomingByte == shotgun [3]) {
             shotgun[3]=shotgun[4];//szshtgn=5
+            shotgun[4]=shotgun[5];//szshtgn=6
             
             //shotgun[3]=0xFF;//szshtgn=4
-            
-            shotgun[4]=0xFF;//szshtgn=5
-          }
+            //shotgun[4]=0xFF;//szshtgn=5
+            shotgun[5]=0xFF;//szshtgn=6
+          }//szshtgn=4
            else {//szshtgn=5
              if (incomingByte == shotgun[4]) {//szshtgn=5
-              shotgun[4]=0xFF;//szshtgn=5
+              shotgun[4]=shotgun[5];//szshtgn=6
+
+              //shotgun[4]=0xFF;//szshtgn=5
+              shotgun[5]=0xFF;//szshtgn=6
            }//szshtgn=5
+            else {//szshtgn=6
+             if (incomingByte == shotgun[5]) {//szshtgn=6
+              shotgun[5]=0xFF;//szshtgn=6
+            }//szshtgn=6
 
            else {
+            shotgun[5]=shotgun[4];//szshtgn=6
             shotgun[4]=shotgun[3];//szshtgn=5
-
-            shotgun[3]=shotgun[2];
+            shotgun[3]=shotgun[2];//szshtgn=4
             shotgun[2]=shotgun[1];
             shotgun[1]=incomingByte;             
 //            slowloop = ((slowloop == 1) && (shotgun[2] == 0xFF)) ? 0 : !(slowloop) ? 1 : slowloop;
@@ -304,8 +317,9 @@ inline void main_loop() { // as fast as possible
            }
           }
          }
-        }
+        }//szshtgn=4
        }//szshtgn=5
+      }//szshtgn=6
 
   }
         
@@ -411,7 +425,8 @@ inline void main_loop() { // as fast as possible
      }
 
       //for (i=1;i<4;i++){//szshtgn=4
-      for (i=1;i<5;i++){//szshtgn=5
+      //for (i=1;i<5;i++){//szshtgn=5
+      for (i=1;i<6;i++){//szshtgn=6
         switch (shotgun[i]) {
 
         case 0xA0://VCO1 1
